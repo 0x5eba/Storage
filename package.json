@@ -1,0 +1,30 @@
+{
+  "scripts": {
+    "start": "nodemon app.js",
+    "dev": "concurrently -n 'server,client' -c 'red,green'  \"nodemon app.js\" \"cd client && yarn start\"",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "name": "merntemplate",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/0x5eba/MERN-template.git",
+  "author": "Sebastien Biollo <sbiollo@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^4.0.1",
+    "bcryptjs": "^2.4.3",
+    "concurrently": "^5.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "gridfs-stream": "^1.1.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.9.7",
+    "mongoose-double": "^0.0.1",
+    "multer": "^1.4.2",
+    "multer-gridfs-storage": "^4.0.3",
+    "nodemon": "^2.0.2",
+    "rand-token": "^1.0.1"
+  }
+}
