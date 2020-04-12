@@ -3,7 +3,7 @@
 } */
 body {
   margin: 0;
-  background-color: whitesmoke;
+  background-color: white;
 }
 
 .flex-container {
@@ -25,4 +25,32 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
+}
+
+.folders {
+  margin: 15px;
+}
+
+.files {
+  margin: 15px;
+}
+
+.icons {
+  color: #5F6368;
+}
+
+.buttons-folders {
+  width: 150px;
+  height: 45px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.buttons-files {
+  width: 150px;
+  height: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

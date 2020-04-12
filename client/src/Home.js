@@ -1,12 +1,19 @@
 import React, { Component } from 'react';
 
 import { Upload, message, Button as ButtonAntd, Input as InputAntd } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { UploadOutlined, FolderAddOutlined } from '@ant-design/icons';
 import 'antd/dist/antd.css';
 
-import { Input, Button } from '@material-ui/core';
+import { Input, Button, TextField } from '@material-ui/core';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FolderIcon from '@material-ui/icons/Folder';
+import LockIcon from '@material-ui/icons/Lock';
+import VisibilityIcon from '@material-ui/icons/Visibility';
+import { Divider } from '@material-ui/core';
+import DescriptionIcon from '@material-ui/icons/Description';
+import SearchIcon from '@material-ui/icons/Search';
+import InputAdornment from '@material-ui/core/InputAdornment';
 
 import Modal from 'react-bootstrap/Modal';
 import { Container, Row, Col} from 'reactstrap';
@@ -155,6 +162,7 @@ class Home extends Component {
 			.then(data => {
 				if (data.err === undefined) {
 					console.log(data)
+					this.getFoldersAndFiles()
 				} else {
 					console.error('Error:', data.err)
 				}
@@ -178,9 +186,31 @@ class Home extends Component {
 		}, () => {})
 	}
 
+	rightClickFolder = (e) => {
+		e.preventDefault()
+		console.log("Ok")
+	}
+
+	clickFolder = (props) => {
+		console.log(props)
+		if(props.password.length === 0){
+
+		} else {
+			// modal per la password
+		}
+	}
+
+	rightClickFile = (e) => {
+		e.preventDefault()
+		console.log("Ok2")
+	}
+
+	clickFile = (props) => {
+	}
+
 	render() {
 		return (
-			<div className="container">
+			<div>
 				<Modal show={this.state.showModal} onHide={this.closeModal}
 					size="md"
 					aria-labelledby="contained-modal-title-vcenter"
@@ -191,13 +221,13 @@ class Home extends Component {
 					</Modal.Title>
 					</Modal.Header>
 					<Modal.Body>
-						<Container style={{paddingLeft: "30px", paddingRight: "30px"}}>
-							<Row>
+						<div style={{paddingLeft: "30px", paddingRight: "30px"}}>
+							<div>
 								<InputAntd placeholder="Folder name" onChange={(e) => this.setState({
 									name: e.target.value
 								})}/>
-							</Row>
-							<Row>
+							</div>
+							<div>
 								<FormControlLabel
 									value="password"
 									control={
@@ -212,8 +242,8 @@ class Home extends Component {
 										password: e.target.value
 									})}/>
 									: null}
-							</Row>
-							<Row>
+							</div>
+							<div>
 								<FormControlLabel
 									value="Visible to everyone"
 									control={
@@ -223,8 +253,8 @@ class Home extends Component {
 									/>}
 									label="Visible to everyone"
 								/>
-							</Row>
-						</Container>
+							</div>
+						</div>
 						
 					</Modal.Body>
 					<Modal.Footer>
@@ -236,67 +266,112 @@ class Home extends Component {
 							onClick={this.createFolder}>Create</Button>
 					</Modal.Footer>
 				</Modal>
-				
-				<Upload {...{
-						name: 'file',
-						action: server_url + '/api/file/uploadFile',
-						beforeUpload(file, fileList) {
-							var files = fileList
-							let size = 16000000
-							for (var a = 0; a < files.length; a++) {
-								if (files[a].size > size) {
-									message.error(`${files[a].name} is too large, please pick a smaller file\n`);
-									return false
+			
+				<div className="container">
+					<div>
+						{/* <Input placeholder="Search" style={{margin: "20px", marginBottom: "0px", maxWidth: "800px", width: "80%"}} onChange={(e) => this.setState({
+							search: e.target.value
+						})}/> */}
+						<TextField label="Search" type="search" variant="outlined" 
+							style={{margin: "20px", marginBottom: "0px", maxWidth: "600px", width: "80%"}} onChange={(e) => this.setState({
+							search: e.target.value
+						})}/>
+					</div>
+					
+					<div style={{margin: "20px"}}>
+						<Upload {...{
+								name: 'file',
+								action: server_url + '/api/file/uploadFile',
+								beforeUpload(file, fileList) {
+									var files = fileList
+									let size = 16000000
+									for (var a = 0; a < files.length; a++) {
+										if (files[a].size > size) {
+											message.error(`${files[a].name} is too large, please pick a smaller file\n`);
+											return false
+										}
+									}
+									return true
+								},
+								data: {
+									owner: this.state.owner,
+									token: this.state.token,
+									path: this.state.path,
+									// password: this.state.password,
+									// visibleToEveryone: this.state.visible,
+								},
+								showUploadList: false,
+								onChange(info) {
+									if (info.file.status === 'done') {
+										message.success(`${info.file.name} file uploaded successfully`);
+										this.getFoldersAndFiles()
+									} else if (info.file.status === 'error') {
+										message.error(`${info.file.name} file upload failed.`);
+									}
 								}
-							}
-							return true
-						},
-						data: {
-							owner: this.state.owner,
-							token: this.state.token,
-							path: this.state.path,
-							// password: this.state.password,
-							// visibleToEveryone: this.state.visible,
-						},
-						showUploadList: false,
-						onChange(info) {
-							if (info.file.status === 'done') {
-								message.success(`${info.file.name} file uploaded successfully`);
-							} else if (info.file.status === 'error') {
-								message.error(`${info.file.name} file upload failed.`);
-							}
-						}
-					}}>
-					<ButtonAntd>
-						<UploadOutlined /> Upload File
-					</ButtonAntd>
-				</Upload>
+							}}>
+							<Button 
+								variant="contained"
+								className="buttons-folders"
+								style={{ backgroundColor: "white", textAlign: "left", justifyContent: "left", borderRadius: "7px"}}
+								startIcon={<UploadOutlined />}>
+						 		Upload File
+							</Button>
+						</Upload>
 
-				<ButtonAntd onClick={this.openModal}>
-					Create Folder
-				</ButtonAntd>
+						<Button 
+							variant="contained"
+							className="buttons-folders"
+							style={{backgroundColor: "white", textAlign: "left", justifyContent: "left", borderRadius: "7px", marginLeft: "20px"}}
+							startIcon={<FolderAddOutlined />} 
+							onClick={this.openModal}>
+							Create Folder
+						</Button>
+					</div>
 
-				<Row>
-					{this.state.folders.map((item) => {
-						return (
-							<div>
-								<p>{item.name}</p>
-								<p>{item.password}</p>
-							</div>
-						)
-					})}
-				</Row>
+					<Row>
+						{this.state.folders.map((item) => {
+							return (
+								<div className="folders" key={item._id}>
+									<Button
+										variant="contained"
+										className="buttons-folders"
+										style={{textTransform: 'none', backgroundColor: "white", textAlign: "left", justifyContent: "left", borderRadius: "7px"}}
+										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" /> : 
+											(item.visibleToEveryone === true ? <VisibilityIcon className="icons" /> : <FolderIcon className="icons" />))}
+										onContextMenu={this.rightClickFolder}
+										onClick={() => this.clickFolder(item)}
+									>
+										{item.name}
+									</Button>
+								</div>
+							)
+						})}
+					</Row>
 
-				<Row>
-					{this.state.files.map((item) => {
-						return (
-							<div>
-								<p>{item.name}</p>
-								<p>{item.password}</p>
-							</div>
-						)
-					})}
-				</Row>
+					<Divider />
+
+					<Row>
+						{this.state.files.map((item) => {
+							return (
+								<div className="files" key={item._id}>
+									<Button
+										props={item}
+										variant="contained"
+										className="buttons-files"
+										style={{textTransform: 'none', backgroundColor: "white", textAlign: "left", justifyContent: "left"}}
+										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" /> : 
+											(item.visibleToEveryone === true ? <VisibilityIcon className="icons" /> : <DescriptionIcon className="icons" />))}
+										onContextMenu={this.rightClickFile}
+										onClick={() => this.clickFile(item)}
+									>
+										{item.name}
+									</Button>
+								</div>
+							)
+						})}
+					</Row>
+				</div>
 			</div>
 		);
 	}

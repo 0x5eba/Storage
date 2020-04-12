@@ -28,6 +28,9 @@
     "multer-gridfs-storage": "^4.0.3",
     "nodemon": "^2.0.2",
     "rand-token": "^1.0.1",
-    "react-bootstrap": "^1.0.0"
+    "react-bootstrap": "^1.0.0",
+    "react-contexify": "^4.1.1",
+    "react-context-menu": "^3.0.2",
+    "react-contextmenu": "^2.13.0"
   }
 }
