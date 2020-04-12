@@ -37,23 +37,23 @@ exports.uploadFile = (fileData) => {
 	})
 }
 
-// exports.getFileById = (id) => {
-// 	return new Promise((resolve, reject) => {
-// 		File.findById(id, {}, function (err, file) {
-// 			if (err) return reject(err)
-// 			resolve(file)
-// 		})
-// 	})
-// }
+exports.getFileById = (id) => {
+	return new Promise((resolve, reject) => {
+		File.findById(id, {}, function (err, file) {
+			if (err) return reject(err)
+			resolve(file)
+		})
+	})
+}
 
-// exports.changeFile = (id, data) => {
-// 	return new Promise((resolve, reject) => {
-// 		File.findByIdAndUpdate(id, data, function (err, file) {
-// 			if (err) return reject(err)
-// 			resolve(file)
-// 		})
-// 	})
-// }
+exports.changeFile = (id, data) => {
+	return new Promise((resolve, reject) => {
+		File.findByIdAndUpdate(id, data, function (err, file) {
+			if (err) return reject(err)
+			resolve(file)
+		})
+	})
+}
 
 exports.removeFile = (idFile) => {
     return new Promise((resolve, reject) => {

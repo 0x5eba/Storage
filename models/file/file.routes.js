@@ -10,8 +10,9 @@ const AuthController = require("../common/middlewares/auth.validation.middleware
 
 exports.routesConfig = function (app) {
 	app.post('/api/file/uploadFile', [
-        AuthController.proofToken,
         upload.single('file'),
+        AuthController.proofTokenForUpload,
+        FileController.removeFileWihCheck,
         FileController.uploadFile
     ]);
 
@@ -36,12 +37,8 @@ const storage = new GridFsStorage({
                 }
                 var filename = buf.toString('hex') + Date.now() + path.extname(file.originalname);
 
-                req.body = {
-                    idFile: filename,
-                    owner: req.body.owner,
-                    name: file.originalname,
-                    path: req.body.path,
-                }
+                req.body.idFile = filename
+                req.body.name = file.originalname
 
                 const fileInfo = {
                     filename: filename,

@@ -31,6 +31,8 @@ class Home extends Component {
 			visible: false,
 			showModal: false,
 			showPassword: false,
+			folders: [],
+			files: [],
 		}
 	}
 
@@ -51,7 +53,9 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-					console.log(data)
+					this.setState({
+						folders: data
+					})
 				} else {
 					console.error('Error:', data.err)
 				}
@@ -70,7 +74,9 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-					console.log(data)
+					this.setState({
+						files: data
+					})
 				} else {
 					console.error('Error:', data.err)
 				}
@@ -81,18 +87,11 @@ class Home extends Component {
 	}
 
 	sha256 = async (message) => {
-		// encode as UTF-8
-		const msgBuffer = new TextEncoder('utf-8').encode(message);                    
-	
-		// hash the message
-		const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-	
-		// convert ArrayBuffer to Array
-		const hashArray = Array.from(new Uint8Array(hashBuffer));
-	
-		// convert bytes to hex string                  
-		const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('');
-		return hashHex;
+		const msgBuffer = new TextEncoder('utf-8').encode(message)    
+		const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
+		const hashArray = Array.from(new Uint8Array(hashBuffer))
+		const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('')
+		return hashHex
 	}
 
 	generate_token = (length) => {
@@ -111,7 +110,6 @@ class Home extends Component {
 				owner: window.localStorage.getItem("owner"),
 				token: window.localStorage.getItem("token")
 			}, () => {
-				console.log(this.state)
 				this.getFoldersAndFiles()
 			})
 		} else {
@@ -182,7 +180,7 @@ class Home extends Component {
 
 	render() {
 		return (
-			<div>
+			<div className="container">
 				<Modal show={this.state.showModal} onHide={this.closeModal}
 					size="md"
 					aria-labelledby="contained-modal-title-vcenter"
@@ -238,7 +236,7 @@ class Home extends Component {
 							onClick={this.createFolder}>Create</Button>
 					</Modal.Footer>
 				</Modal>
-
+				
 				<Upload {...{
 						name: 'file',
 						action: server_url + '/api/file/uploadFile',
@@ -277,8 +275,29 @@ class Home extends Component {
 				<ButtonAntd onClick={this.openModal}>
 					Create Folder
 				</ButtonAntd>
-			</div>
 
+				<Row>
+					{this.state.folders.map((item) => {
+						return (
+							<div>
+								<p>{item.name}</p>
+								<p>{item.password}</p>
+							</div>
+						)
+					})}
+				</Row>
+
+				<Row>
+					{this.state.files.map((item) => {
+						return (
+							<div>
+								<p>{item.name}</p>
+								<p>{item.password}</p>
+							</div>
+						)
+					})}
+				</Row>
+			</div>
 		);
 	}
 }
