@@ -6,6 +6,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "proxy": "http://localhost:3001",
   "name": "merntemplate",
   "version": "1.0.0",
   "main": "index.js",
@@ -15,6 +16,7 @@
   "dependencies": {
     "bcrypt": "^4.0.1",
     "bcryptjs": "^2.4.3",
+    "bootstrap": "^4.4.1",
     "concurrently": "^5.1.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
@@ -25,6 +27,7 @@
     "multer": "^1.4.2",
     "multer-gridfs-storage": "^4.0.3",
     "nodemon": "^2.0.2",
-    "rand-token": "^1.0.1"
+    "rand-token": "^1.0.1",
+    "react-bootstrap": "^1.0.0"
   }
 }

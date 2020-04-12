@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const config = require('../config/env.config.js')
 var randtoken = require('rand-token')
+const crypto = require("crypto")
 
 const jwtSecret = config.jwtSecret
 const jwtSecret2 = config.jwtSecret2
@@ -126,5 +127,17 @@ exports.limitRequest = (req, res, next) => {
     } else {
         ipCreateAccount[remoteip] = currDate
         return next()
+    }
+}
+
+exports.proofToken = (req, res, next) => {
+    if(!req.body.token || !req.body.owner){
+        return res.status(500).send({ err: 'No proof given' })
+    }
+
+    if(crypto.createHash('sha256').update(req.body.token).digest('hex') === req.body.owner){
+        return next()
+    } else {
+        return res.status(500).send({ err: 'Wrong proof' })
     }
 }

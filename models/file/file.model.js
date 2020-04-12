@@ -11,7 +11,7 @@ const FileModel = new mongoose.Schema({
     password: { type: String, trim: true, default: "" }, // se password !== '' allora devi passargli password per vederlo o essere l'owner
     // linkModify: { type: String, trim: true, default: "" }, // _id + random_string
     linkView: { type: String, trim: true, default: "" }, // _id + random_string
-    visibleToEveryone: { type: Boolean, default: false },
+    visibleToEveryone: { type: Boolean, default: true },
     // type: { type: String, trim: true, default: "" }, // se e' un'immagine o un txt o pdf posso fare una preview, altrimenti solo download
 })
 
@@ -83,4 +83,13 @@ exports.getFile = (req, res) => {
             res.status(201).end()
         })
     });
+}
+
+exports.getFiles = (owner, path) => {
+    return new Promise((resolve, reject) => {
+        File.find({ path: path, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {}, function (err, file) {
+			if (err) return reject(err)
+			resolve(file)
+		})
+    })
 }

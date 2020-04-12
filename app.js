@@ -8,6 +8,8 @@ app.use(cors())
 app.use(bodyParser.json())
 
 const FileRouter = require('./models/file/file.routes.js')
+const FolderRouter = require('./models/folder/folder.routes.js')
+FolderRouter.routesConfig(app)
 FileRouter.routesConfig(app)
 
 app.use(function (req, res, next) {

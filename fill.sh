@@ -1,12 +1,7 @@
-mongo mongodb://localhost:27017/meetgitter <<EOF
-db.Coupon.drop();
+mongo mongodb://localhost:27017/storage <<EOF
+db.File.drop();
+db.Folder.drop();
 
-db.createCollection("Utente");
-
-db.Utente.insert({
-  email: "sbiollo@gmail.com",
-  password: "ciao",
-  nome: "Sebastien",
-  cognome: "Biollo"
-});
+db.createCollection("File");
+db.createCollection("Folder");
 EOF

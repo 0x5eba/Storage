@@ -5,15 +5,24 @@ const multer = require('multer')
 const fs = require('fs')
 const GridFsStorage = require('multer-gridfs-storage')
 var config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
+const AuthController = require("../common/middlewares/auth.validation.middleware")
+
 
 exports.routesConfig = function (app) {
 	app.post('/api/file/uploadFile', [
+        AuthController.proofToken,
         upload.single('file'),
         FileController.uploadFile
     ]);
 
     app.get('/api/file/getFile', [
+        AuthController.proofToken,
         FileController.getFile
+    ]);
+
+    app.post('/api/file/getFiles', [
+        AuthController.proofToken,
+        FileController.getFiles
     ]);
 }
 
