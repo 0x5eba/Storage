@@ -8,7 +8,7 @@ exports.routesConfig = function (app) {
         FolderController.createFolder
     ]);
 
-    app.get('/api/folder/getFolder', [
+    app.post('/api/folder/getFolder', [
         AuthController.proofToken,
         FolderController.getFolder,
         FolderController.checkPrivileges,

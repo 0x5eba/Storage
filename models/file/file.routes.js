@@ -18,7 +18,7 @@ exports.routesConfig = function (app) {
         FileController.uploadFile
     ]);
 
-    app.get('/api/file/getFile', [
+    app.post('/api/file/getFile', [
         AuthController.proofToken,
         FileController.getFile,
         FileController.checkPrivileges,

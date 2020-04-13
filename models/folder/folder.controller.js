@@ -12,7 +12,7 @@ exports.createFolder = (req, res, next) => {
             req.body.password = hash
         }
 
-        req.body.idFolder = buf.toString('hex') + (req.body.name).toString('hex') + Date.now() 
+        req.body.idFolder = buf.toString('hex') + Date.now() 
         req.body.linkView = crypto.createHash('sha256').update(req.body.idFolder).digest('hex')
 
         FolderController.saveFolder(req.body)
@@ -58,8 +58,16 @@ exports.getFolderById = (req, res, next) => {
 exports.checkPrivileges = (req, res, next) => {
     var folder = req.body.result
 
-    if(folder.password.length !== 0 && req.body.password !== folder.password){
-        res.status(403).send({ err: "Error wrong password for this folder" })
+    if(folder.password.length !== 0){
+        if(!req.body.password || req.body.password.length === 0){
+            res.status(403).send({ err: "No password provided for this folder" })
+        } else {
+            if(bcrypt.compareSync(req.body.password, folder.password)){
+                res.status(201).send(folder);
+            } else {
+                res.status(403).send({ err: "Error wrong password for this folder" })
+            }
+        }
     } else if(folder.visibleToEveryone === false && req.body.owner !== folder.owner){
         res.status(403).send({ err: "You are not autorized to access this folder" })
     } else {
@@ -71,7 +79,7 @@ exports.checkIfFolderExistForFile = (req, res, next) => {
     var idFolder = req.body.path.split("/")
     idFolder = idFolder[idFolder.length-1]
 
-    if(idFolder === "localhost:8000"){
+    if(req.body.path === "http://localhost:8000/"){
         return next()
     }
 
@@ -94,7 +102,7 @@ exports.checkIfFolderExist = (req, res, next) => {
     var idFolder = req.body.path.split("/")
     idFolder = idFolder[idFolder.length-1]
 
-    if(idFolder === "localhost:8000"){
+    if(req.body.path === "http://localhost:8000/"){
         return next()
     }
 
