@@ -1,6 +1,7 @@
 {
   "scripts": {
     "start": "nodemon app.js",
+    "client": "cd client && yarn start",
     "dev": "concurrently -n 'server,client' -c 'red,green'  \"nodemon app.js\" \"cd client && yarn start\"",
     "build": "react-scripts build",
     "test": "react-scripts test",

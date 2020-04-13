@@ -41,6 +41,8 @@ class Home extends Component {
 			folders: [],
 			files: [],
 		}
+
+		this.getFoldersAndFiles = this.getFoldersAndFiles.bind(this)
 	}
 
 	getFoldersAndFiles = () => {
@@ -304,7 +306,6 @@ class Home extends Component {
 								onChange(info) {
 									if (info.file.status === 'done') {
 										message.success(`${info.file.name} file uploaded successfully`);
-										this.getFoldersAndFiles()
 									} else if (info.file.status === 'error') {
 										message.error(`${info.file.name} file upload failed.`);
 									}
@@ -313,7 +314,13 @@ class Home extends Component {
 							<Button 
 								variant="contained"
 								className="buttons-folders"
-								style={{ backgroundColor: "white", textAlign: "left", justifyContent: "left", borderRadius: "7px"}}
+								style={{ 
+									backgroundColor: "white", 
+									textAlign: "left", 
+									justifyContent: "left",
+									backgroundColor: "#2196f3",
+									borderRadius: "7px",
+									width: "auto"}}
 								startIcon={<UploadOutlined />}>
 						 		Upload File
 							</Button>
@@ -322,29 +329,36 @@ class Home extends Component {
 						<Button 
 							variant="contained"
 							className="buttons-folders"
-							style={{backgroundColor: "white", textAlign: "left", justifyContent: "left", borderRadius: "7px", marginLeft: "20px"}}
+							style={{
+								backgroundColor: "white", 
+								textAlign: "left", 
+								justifyContent: "left", 
+								backgroundColor: "#ff9800",
+								borderRadius: "7px", 
+								marginLeft: "20px", 
+								width: "auto"}}
 							startIcon={<FolderAddOutlined />} 
 							onClick={this.openModal}>
 							Create Folder
 						</Button>
 					</div>
-
+					
 					<Row>
 						{this.state.folders.map((item) => {
 							return (
-								<div className="folders" key={item._id}>
+								<Col className="folders" key={item._id}>
 									<Button
 										variant="contained"
 										className="buttons-folders"
 										style={{textTransform: 'none', backgroundColor: "white", textAlign: "left", justifyContent: "left", borderRadius: "7px"}}
-										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" /> : 
-											(item.visibleToEveryone === true ? <VisibilityIcon className="icons" /> : <FolderIcon className="icons" />))}
+										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" style={{color: "#f44336"}} /> : 
+											(item.visibleToEveryone === true ? <VisibilityIcon className="icons" style={{color: "#4caf50"}} /> : <FolderIcon className="icons" />))}
 										onContextMenu={this.rightClickFolder}
 										onClick={() => this.clickFolder(item)}
 									>
 										{item.name}
 									</Button>
-								</div>
+								</Col>
 							)
 						})}
 					</Row>
@@ -354,20 +368,20 @@ class Home extends Component {
 					<Row>
 						{this.state.files.map((item) => {
 							return (
-								<div className="files" key={item._id}>
+								<Col className="files" key={item._id}>
 									<Button
 										props={item}
 										variant="contained"
 										className="buttons-files"
-										style={{textTransform: 'none', backgroundColor: "white", textAlign: "left", justifyContent: "left"}}
-										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" /> : 
-											(item.visibleToEveryone === true ? <VisibilityIcon className="icons" /> : <DescriptionIcon className="icons" />))}
+										style={{textOverflow: "ellipsis", textTransform: 'none', backgroundColor: "white", textAlign: "left", justifyContent: "left"}}
+										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" style={{color: "#f44336"}} /> : 
+											(item.visibleToEveryone === true ? <VisibilityIcon className="icons" style={{color: "#4caf50"}} /> : <DescriptionIcon className="icons" />))}
 										onContextMenu={this.rightClickFile}
 										onClick={() => this.clickFile(item)}
 									>
 										{item.name}
 									</Button>
-								</div>
+								</Col>
 							)
 						})}
 					</Row>
