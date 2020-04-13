@@ -1,24 +1,35 @@
 const FileController = require('./file.controller')
+const AuthController = require("../common/middlewares/auth.validation.middleware")
+const FolderController = require('../folder/folder.controller')
 const path = require("path")
 const crypto = require('crypto')
 const multer = require('multer')
 const fs = require('fs')
 const GridFsStorage = require('multer-gridfs-storage')
 var config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
-const AuthController = require("../common/middlewares/auth.validation.middleware")
 
 
 exports.routesConfig = function (app) {
 	app.post('/api/file/uploadFile', [
         upload.single('file'),
         AuthController.proofTokenForUpload,
+        FolderController.checkIfFolderExistForFile,
         FileController.removeFileWihCheck,
         FileController.uploadFile
     ]);
 
     app.get('/api/file/getFile', [
         AuthController.proofToken,
-        FileController.getFile
+        FileController.getFile,
+        FileController.checkPrivileges,
+        FileController.getFileFormGridfs,
+    ]);
+
+    app.get('/api/file/getFile/:id', [
+        AuthController.proofToken,
+        FileController.getFileById,
+        FileController.checkPrivileges,
+        FileController.getFileFormGridfs,
     ]);
 
     app.post('/api/file/getFiles', [

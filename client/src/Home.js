@@ -37,6 +37,7 @@ class Home extends Component {
 			password: "",
 			visible: false,
 			showModal: false,
+			showModalPasswod: false,
 			showPassword: false,
 			folders: [],
 			files: [],
@@ -165,9 +166,15 @@ class Home extends Component {
 				if (data.err === undefined) {
 					console.log(data)
 					this.getFoldersAndFiles()
+					message.success(`${data.name} folder uploaded successfully`);
 				} else {
+					message.error(`Folder upload failed.`)
 					console.error('Error:', data.err)
 				}
+
+				this.setState({
+					showModal: false,
+				})
 			})
 			.catch((error) => {
 				console.error('Error:', error)
@@ -190,24 +197,30 @@ class Home extends Component {
 
 	rightClickFolder = (e) => {
 		e.preventDefault()
-		console.log("Ok")
 	}
 
 	clickFolder = (props) => {
 		console.log(props)
 		if(props.password.length === 0){
-
+			window.location.href = "http://localhost:8000/" + props.idFolder
 		} else {
 			// modal per la password
+			this.setState({
+
+			})
 		}
 	}
 
 	rightClickFile = (e) => {
 		e.preventDefault()
-		console.log("Ok2")
 	}
 
 	clickFile = (props) => {
+		var url = window.location.href
+		if(url[url.length-1] === "/"){
+			url = url.slice(0, -1)
+		}
+		window.location.href = url + "/" + props.idFile
 	}
 
 	render() {

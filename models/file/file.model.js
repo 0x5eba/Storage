@@ -46,6 +46,15 @@ exports.getFileById = (id) => {
 	})
 }
 
+exports.getFile = (idFile) => {
+	return new Promise((resolve, reject) => {
+		File.find({idFile: idFile}, {}, function (err, file) {
+			if (err) return reject(err)
+			resolve(file)
+		})
+	})
+}
+
 exports.changeFile = (id, data) => {
 	return new Promise((resolve, reject) => {
 		File.findByIdAndUpdate(id, data, function (err, file) {
@@ -67,7 +76,7 @@ exports.removeFile = (idFile) => {
     })
 }
 
-exports.getFile = (req, res) => { 
+exports.getFileFormGridfs = (req, res) => { 
     gfs.files.findOne({ filename: req.body.filename }, (err, file) => { // "metadata.name": req.body.name
         if (!file || file.length === 0) {
             return res.status(404).send({ err: "No file exists" });
