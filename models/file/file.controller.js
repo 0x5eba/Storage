@@ -106,3 +106,33 @@ exports.searchFile = (req, res, next) => {
             res.status(403).send({ err: "Error searching files" })
         })
 }
+
+exports.deleteFile = (req, res, next) => {
+    FileController.deleteFile(req.body.owner, req.body.idFile)
+        .then((result) => {
+            return next()
+        })
+        .catch(err => {
+            res.status(403).send({ err: "Error deleting file" })
+        })
+}
+
+exports.deleteFileGrid = (req, res) => {
+    FileController.deleteFileGrid(req, res)
+}
+
+exports.isOwner = (req, res, next) => {
+    FileController.isOwner(req.body.owner, req.body.idFile)
+        .then((result) => {
+            if(result === null){
+                res.status(403).send({ err: "No file found or you are not authorized to access this file" })
+            } else if(result.owner !== req.body.owner){
+                res.status(403).send({ err: "You are not authorized to access this file" })
+            } else {
+                return next()
+            }
+        })
+        .catch(err => {
+            res.status(403).send({ err: "Error deleting file" })
+        })
+}

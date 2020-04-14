@@ -134,9 +134,35 @@ exports.searchFolder = (req, res, next) => {
     var search = escapeRegExp(req.body.search)
     FolderController.searchFolders(req.body.owner, search)
         .then((result) => {
-            res.status(201).send({folders: result, files: req.body.files});
+            res.status(201).send({folders: result, folders: req.body.folders});
         })
         .catch(err => {
             res.status(403).send({ err: "Error searching folders" })
+        })
+}
+
+exports.deleteFolder = (req, res, next) => {
+    FolderController.deleteFolder(req.body.owner, req.body.idFolder)
+        .then((result) => {
+            res.status(201).send(result);
+        })
+        .catch(err => {
+            res.status(403).send({ err: "Error deleting folder" })
+        })
+}
+
+exports.isOwner = (req, res, next) => {
+    FolderController.isOwner(req.body.owner, req.body.idFolder)
+        .then((result) => {
+            if(result === null){
+                res.status(403).send({ err: "No folder found" })
+            } else if(result.owner !== req.body.owner){
+                res.status(403).send({ err: "You are not authorized to access this folder" })
+            } else {
+                return next()
+            }
+        })
+        .catch(err => {
+            res.status(403).send({ err: "Error deleting folder" })
         })
 }

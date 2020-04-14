@@ -138,7 +138,6 @@ exports.proofToken = (req, res, next) => {
     if(crypto.createHash('sha256').update(req.body.token).digest('hex') === req.body.owner){
         return next()
     } else {
-        console.log("WTF")
         return res.status(500).send({ err: 'Wrong proof' })
     }
 }

@@ -27,6 +27,14 @@ exports.routesConfig = function (app) {
         FolderController.getFolders
     ]);
 
+    app.delete('/api/folder/deleteFolder', [
+        AuthController.proofToken,
+        FolderController.isOwner,
+        FolderController.deleteFolder
+    ]);
+
+
+    
     app.post('/api/search', [
         AuthController.proofToken,
         FileController.searchFile,

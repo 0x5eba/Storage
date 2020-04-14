@@ -60,3 +60,21 @@ exports.searchFolders = (owner, search) => {
 		})
 	})
 }
+
+exports.deleteFolder = (owner, idFolder) => {
+	return new Promise((resolve, reject) => {
+		Folder.findOneAndDelete({ owner: owner, idFolder: idFolder }, {}, function (err, folder) {
+			if (err) return reject(err)
+			resolve(folder)
+		})
+	})
+}
+
+exports.isOwner = (owner, idFolder) => {
+	return new Promise((resolve, reject) => {
+		Folder.findOne({ owner: owner, idFolder: idFolder }, {}, function (err, folder) {
+			if (err) return reject(err)
+			resolve(folder)
+		})
+	})
+}

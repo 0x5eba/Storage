@@ -9,6 +9,8 @@ class App extends Component {
 				<Router>
 					<Switch>
 						<Route path="/" component={Home} />
+						{/* <Route path="/file" component={File} />
+						<Route path="/folder" component={Folder} /> */}
 					</Switch>
 				</Router>
 			</div>

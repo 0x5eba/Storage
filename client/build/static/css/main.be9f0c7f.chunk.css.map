@@ -1,1 +1,0 @@
-{"version":3,"sources":["Home.css"],"names":[],"mappings":"AAAA,UACE,WACF,CACA,KACE,QAAS,CACT,wBACF","file":"main.be9f0c7f.chunk.css","sourcesContent":["html, body {\n  height: 100%;\n}\nbody {\n  margin: 0;\n  background-color: whitesmoke;\n}"]}

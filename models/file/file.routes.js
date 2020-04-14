@@ -36,6 +36,13 @@ exports.routesConfig = function (app) {
         AuthController.proofToken,
         FileController.getFiles
     ]);
+
+    app.delete('/api/file/deleteFile', [
+        AuthController.proofToken,
+        FileController.isOwner,
+        FileController.deleteFile,
+        FileController.deleteFileGrid,
+    ]);
 }
 
 const storage = new GridFsStorage({

@@ -14,6 +14,12 @@ import { Divider } from '@material-ui/core';
 import DescriptionIcon from '@material-ui/icons/Description';
 import SearchIcon from '@material-ui/icons/Search';
 
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import Typography from '@material-ui/core/Typography';
+import DraftsIcon from '@material-ui/icons/Drafts';
+
 import Modal from 'react-bootstrap/Modal';
 import { Row, Col} from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.css';
@@ -21,11 +27,13 @@ import 'bootstrap/dist/css/bootstrap.css';
 // import { ToastContainer, toast } from 'react-toastify';
 // import 'react-toastify/dist/ReactToastify.css';
 
-import { Document, Page, pdfjs, Text } from 'react-pdf';
+// import { Document, Page, pdfjs, Text } from 'react-pdf';
+// // pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+
 
 import "./Home.css"
 
-const server_url = 'http://localhost:3001'
+const server_url = process.env.NODE_ENV === 'production' ? 'https://b245419e.ngrok.io' : 'http://localhost:3001'
 
 class Home extends Component {
 	constructor(props) {
@@ -46,11 +54,13 @@ class Home extends Component {
 			search: "",
 
 			url: null,
-			numPages: 1,
-			currPage: 1,
+			showModalFile: false,
+
+			mouseX: null,
+			mouseY: null,
+			isFile: false,
 		}
 
-		pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 		this.getFoldersAndFiles = this.getFoldersAndFiles.bind(this)
 	}
@@ -81,7 +91,7 @@ class Home extends Component {
 							files: data.files,
 						})
 					} else {
-						console.error('Error:', data.err)
+						message.error(data.err)
 					}
 				})
 				.catch((error) => {
@@ -132,7 +142,7 @@ class Home extends Component {
 						files: data
 					})
 				} else {
-					console.error('Error:', data.err)
+					message.error(data.err)
 				}
 			})
 			.catch((error) => {
@@ -213,7 +223,6 @@ class Home extends Component {
 					message.success(`${data.name} folder uploaded successfully`);
 				} else {
 					message.error(`Folder upload failed.`)
-					console.error('Error:', data.err)
 				}
 
 				this.setState({
@@ -250,7 +259,7 @@ class Home extends Component {
 						window.location.href = "http://localhost:8000/" + this.state.id
 					})
 				} else {
-					console.error('Error:', data.err)
+					message.error(data.err)
 				}
 			})
 			.catch((error) => {
@@ -287,14 +296,11 @@ class Home extends Component {
 		this.setState({
 			showModal: false,
 			showModalPasswod: false,
+			showModalFile: false,
 		}, () => {})
 	}
 
-	rightClickFolder = (e) => {
-		e.preventDefault()
-	}
-
-	clickFolder = (props) => {
+	clickFolder = (props, showModel=true) => {
 		if(props.password.length === 0){
 			window.location.href = "http://localhost:8000/" + props.idFolder
 		} else {
@@ -302,22 +308,12 @@ class Home extends Component {
 			this.setState({
 				id: props.idFolder,
 				name: props.name,
-				showModalPasswod: true,
+				showModalPasswod: showModel,
 			})
 		}
 	}
 
-	rightClickFile = (e) => {
-		e.preventDefault()
-	}
-
-	clickFile = (props) => {
-		// var url = window.location.href
-		// if(url[url.length-1] === "/"){
-		// 	url = url.slice(0, -1)
-		// }
-		// window.location.href = url + "/" + props.idFile
-		
+	clickFile = (props, showModel=true) => {
 		var data = {
 			idFile: props.idFile,
 			owner: this.state.owner,
@@ -333,27 +329,67 @@ class Home extends Component {
 		})
 			.then(data => data.blob())
 			.then(data => {
-				console.log(data)
-
 				this.setState({
-					url: URL.createObjectURL(data)
-				}, () => {
-					// window.location.href = this.state.url
-
-					var tempLink = document.createElement('a');
-					tempLink.href = this.state.url;
-					tempLink.setAttribute('download', 'download');
-					tempLink.click();
+					url: URL.createObjectURL(data),
+					name: props.name,
+					showModalFile: showModel,
 				})
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+	}
 
-				// var reader = new FileReader();
-				// reader.readAsDataURL(data);
-				// reader.onloadend = function () {
-				// 	var base64data = reader.result
-				// 	console.log(base64data)
-				// 	// document.getElementById("img-profile").src = base64data;
-				// 	// document.getElementById("img-profile-edit").src = base64data;
-				// }
+	viewFile = () => {
+		window.location.href = this.state.url
+	}
+
+	closeMenu = () => {
+		this.setState({
+			mouseX: null,
+			mouseY: null,
+		})
+	}
+
+	downloadFile = () => {
+		var link = document.createElement('a')
+		link.href = this.state.url
+		link.setAttribute('download', this.state.name)
+		link.click()
+	}
+
+	remove = () => {
+		var data = {
+			idFolder: this.state.id,
+			owner: this.state.owner,
+			token: this.state.token,
+		}
+		var url = "/api/folder/deleteFolder"
+
+		if(this.state.isFile === true){
+			data = {
+				idFile: this.state.id,
+				owner: this.state.owner,
+				token: this.state.token,
+			}
+			url = "/api/file/deleteFile"
+		}
+
+		fetch(server_url + url, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				if(data.err === undefined){
+					message.success(`${this.state.isFile === true ? "File" : "Folder"} deleted`)
+					this.getFoldersAndFiles()
+				} else {
+					message.error(data.err)
+				}
 			})
 			.catch((error) => {
 				console.error('Error:', error)
@@ -363,7 +399,7 @@ class Home extends Component {
 	render() {
 		return (
 			<div>
-				{this.state.url !== null && <img src={this.state.url} />}
+				{/* {this.state.url !== null && <img src={this.state.url} />}
 
 				{this.state.url !== null && 
 					<Document file={this.state.url} onLoadSuccess={({ numPages }) => this.setState({ 
@@ -372,7 +408,70 @@ class Home extends Component {
 							currPage: this.state.currPage + 1
 						})}>
 						<Page pageNumber={this.state.currPage} />
-					</Document>}
+					</Document>} */}
+				
+				<Menu
+					keepMounted
+					open={this.state.mouseY !== null}
+					onClose={this.closeMenu}
+					anchorReference="anchorPosition"
+					anchorPosition={
+					this.state.mouseY !== null && this.state.mouseX !== null
+						? { top: this.state.mouseY, left: this.state.mouseX }
+						: undefined
+					}
+				>	
+					{this.state.isFile === true ? 
+						<div style={{width: "250px"}}>
+							<MenuItem onClick={() => {
+								this.remove()
+								this.closeMenu()}}> 
+								<ListItemIcon>
+									<DraftsIcon fontSize="small" />
+								</ListItemIcon>
+								<Typography variant="inherit" noWrap>
+									Remove
+								</Typography>
+							</MenuItem>
+							<MenuItem onClick={() => {
+								this.downloadFile()
+								this.closeMenu()}}> 
+								<ListItemIcon>
+									<DraftsIcon fontSize="small" />
+								</ListItemIcon>
+								<Typography variant="inherit" noWrap>
+									Download
+								</Typography>
+							</MenuItem>
+							<MenuItem onClick={() => {
+								this.downloadFile()
+								this.closeMenu()}}> 
+								<ListItemIcon>
+									<DraftsIcon fontSize="small" />
+								</ListItemIcon>
+								<Typography variant="inherit" noWrap>
+									Share file
+								</Typography>
+							</MenuItem>
+							{/* <MenuItem onClick={}>Rename</MenuItem> */}
+
+						</div>
+						:
+						<div style={{width: "250px"}}>
+							<MenuItem onClick={() => {
+								this.remove()
+								this.closeMenu()}}> 
+								<ListItemIcon>
+									<DraftsIcon fontSize="small" />
+								</ListItemIcon>
+								<Typography variant="inherit" noWrap>
+									Remove
+								</Typography>
+							</MenuItem>
+						</div>
+					}
+				</Menu>
+				
 
 				<Modal show={this.state.showModal} onHide={this.closeModal}
 					size="md"
@@ -455,12 +554,28 @@ class Home extends Component {
 							onClick={this.accessFolder}>Access</Button>
 					</Modal.Footer>
 				</Modal>
+
+				<Modal show={this.state.showModalFile} onHide={this.closeModal}
+					size="md"
+					aria-labelledby="contained-modal-title-vcenter"
+					centered>
+					<Modal.Header closeButton>
+					<Modal.Title id="contained-modal-title-vcenter">
+						{`File ${this.state.name}`}
+					</Modal.Title>
+					</Modal.Header>
+					<Modal.Body>
+						<div style={{paddingLeft: "30px", paddingRight: "30px", textAlign: "center"}}>
+							<Button variant="contained" style={{ backgroundColor: "#ef5350"}} onClick={this.viewFile}>View</Button>
+							<Button variant="contained" style={{ 
+								backgroundColor: "#4caf50", marginLeft: "20px", marginRight: "20px"}} 
+								onClick={this.downloadFile}>Download</Button>
+						</div>
+					</Modal.Body>
+				</Modal>
 			
 				<div className="container">
 					<div>
-						{/* <Input placeholder="Search" style={{margin: "20px", marginBottom: "0px", maxWidth: "800px", width: "80%"}} onChange={(e) => this.setState({
-							search: e.target.value
-						})}/> */}
 						<TextField label="Search" type="search" variant="outlined" 
 							style={{
 								margin: "20px",
@@ -538,10 +653,21 @@ class Home extends Component {
 										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" style={{marginRight: "10px"}} /> : 
 											(item.visibleToEveryone === true ? <FolderSharedIcon className="icons"  style={{marginRight: "10px"}} /> : 
 												<FolderIcon className="icons"  style={{marginRight: "10px"}} />))}
-										onContextMenu={this.rightClickFolder}
+										onContextMenu={(e) => {
+											e.preventDefault()
+											this.setState({
+												mouseX: e.clientX - 2,
+												mouseY: e.clientY - 4,
+												id: item.idFolder,
+												isFile: false,
+												name: item.name,
+											})
+										}}
 										onClick={() => this.clickFolder(item)}
 									>
-										{item.name}
+										<Typography variant="inherit" noWrap>
+											{item.name}
+										</Typography>
 									</Button>
 								</Col>
 							)
@@ -562,10 +688,20 @@ class Home extends Component {
 											justifyContent: "left", fontSize: "17px", paddingLeft: "20px"}}
 										startIcon={(item.password.length !== 0 ? <LockIcon className="icons"  style={{marginRight: "10px"}} /> : 
 											<DescriptionIcon className="icons"  style={{marginRight: "10px"}}/>)}
-										onContextMenu={this.rightClickFile}
+										onContextMenu={(e) => {
+											e.preventDefault()
+											this.setState({
+												mouseX: e.clientX - 2,
+												mouseY: e.clientY - 4,
+												id: item.idFile,
+												isFile: true,
+											}, () => this.clickFile(item, false))
+										}}
 										onClick={() => this.clickFile(item)}
 									>
-										{item.name}
+										<Typography variant="inherit" noWrap>
+											{item.name}
+										</Typography>
 									</Button>
 								</Col>
 							)

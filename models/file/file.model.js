@@ -94,6 +94,15 @@ exports.getFileFormGridfs = (req, res) => {
     });
 }
 
+exports.deleteFileGrid = (req, res) => { 
+    gfs.files.remove({ filename: req.body.idFile }, (err, file) => {
+        if (!file || file.length === 0) {
+            return res.status(404).send({ err: "File doesn't exist" })
+        }
+        res.status(201).send({})
+    });
+}
+
 exports.getFiles = (owner, path) => {
     return new Promise((resolve, reject) => {
         File.find({ path: path, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {}, function (err, file) {
@@ -107,6 +116,24 @@ exports.searchFiles = (owner, search) => {
 	return new Promise((resolve, reject) => {
 		File.find({ name: { "$regex": new RegExp("^" + search.toLowerCase(), "i") }, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {})
 			.limit(50).exec(function (err, folder) {
+			if (err) return reject(err)
+			resolve(folder)
+		})
+	})
+}
+
+exports.deleteFile = (owner, idFile) => {
+	return new Promise((resolve, reject) => {
+		File.findOneAndDelete({ owner: owner, idFile: idFile }, {}, function (err, folder) {
+			if (err) return reject(err)
+			resolve(folder)
+		})
+	})
+}
+
+exports.isOwner = (owner, idFile) => {
+	return new Promise((resolve, reject) => {
+		File.findOne({ owner: owner, idFile: idFile }, {}, function (err, folder) {
 			if (err) return reject(err)
 			resolve(folder)
 		})
