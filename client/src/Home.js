@@ -33,7 +33,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 import "./Home.css"
 
-const server_url = process.env.NODE_ENV === 'production' ? 'https://b245419e.ngrok.io' : 'http://localhost:3001'
+const server_url = process.env.NODE_ENV === 'production' ? 'https://store.sebastienbiollo.com' : 'http://localhost:3001'
 
 class Home extends Component {
 	constructor(props) {
@@ -54,6 +54,7 @@ class Home extends Component {
 			search: "",
 
 			url: null,
+			downloading: false,
 			showModalFile: false,
 
 			mouseX: null,
@@ -101,6 +102,18 @@ class Home extends Component {
 	}
 
 	getFoldersAndFiles = () => {
+
+		if(this.state.path.includes("folder")){
+			// query per prendere prendere quel folder e i file in quel folder, 
+			// potendo visualizzare tutto, e quelli con la password devono sempre richiederla
+			return
+		}
+
+		if(this.state.path.includes("file")){
+			// query per prendere solo quel file, e metterlo in this.state.files
+			return
+		}
+
 		var data = {
 			path: this.state.path,
 			owner: this.state.owner,
@@ -256,7 +269,7 @@ class Home extends Component {
 					this.setState({
 						showModalPasswod: false,
 					}, () => {
-						window.location.href = "http://localhost:8000/" + this.state.id
+						window.location.href = "/" + this.state.id
 					})
 				} else {
 					message.error(data.err)
@@ -302,7 +315,7 @@ class Home extends Component {
 
 	clickFolder = (props, showModel=true) => {
 		if(props.password.length === 0){
-			window.location.href = "http://localhost:8000/" + props.idFolder
+			window.location.href = "/" + props.idFolder
 		} else {
 			// modal per la password
 			this.setState({
@@ -320,6 +333,12 @@ class Home extends Component {
 			token: this.state.token,
 		}
 
+		this.setState({
+			name: props.name,
+			showModalFile: showModel,
+			downloading: true,
+		})
+
 		fetch(server_url + "/api/file/getFile", {
 			method: 'POST',
 			headers: {
@@ -331,8 +350,26 @@ class Home extends Component {
 			.then(data => {
 				this.setState({
 					url: URL.createObjectURL(data),
-					name: props.name,
-					showModalFile: showModel,
+				}, () => {
+					this.setState({
+						downloading: false,
+					}, () => {
+
+
+						if(this.state.viewFileClicked === true){
+							this.setState({
+								viewFileClicked: false
+							})
+							this.viewFile()
+						} else if(this.state.downloadFileClicked === true){
+							this.setState({
+								downloadFileClicked: false
+							})
+							this.downloadFile()
+						}
+
+
+					})
 				})
 			})
 			.catch((error) => {
@@ -341,7 +378,13 @@ class Home extends Component {
 	}
 
 	viewFile = () => {
-		window.location.href = this.state.url
+		if(this.state.downloading === false){
+			window.location.href = this.state.url
+		} else {
+			this.setState({
+				viewFileClicked: true,
+			})
+		}
 	}
 
 	closeMenu = () => {
@@ -352,10 +395,16 @@ class Home extends Component {
 	}
 
 	downloadFile = () => {
-		var link = document.createElement('a')
-		link.href = this.state.url
-		link.setAttribute('download', this.state.name)
-		link.click()
+		if(this.state.downloading === false){
+			var link = document.createElement('a')
+			link.href = this.state.url
+			link.setAttribute('download', this.state.name)
+			link.click()
+		} else {
+			this.setState({
+				downloadFileClicked: true,
+			})
+		}
 	}
 
 	remove = () => {

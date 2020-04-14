@@ -78,11 +78,12 @@ exports.checkPrivileges = (req, res, next) => {
 
 exports.checkIfFolderExistForFile = (req, res, next) => {
     var idFolder = req.body.path.split("/")
-    idFolder = idFolder[idFolder.length-1]
-
-    if(req.body.path === "http://localhost:8000/"){
+    
+    if(idFolder[3].length === 0){
         return next()
     }
+
+    idFolder = idFolder[idFolder.length-1]
 
     FolderController.getFolder(idFolder)
         .then((result) => {
@@ -101,11 +102,12 @@ exports.checkIfFolderExistForFile = (req, res, next) => {
 
 exports.checkIfFolderExist = (req, res, next) => {
     var idFolder = req.body.path.split("/")
-    idFolder = idFolder[idFolder.length-1]
 
-    if(req.body.path === "http://localhost:8000/"){
+    if(idFolder[3].length === 0){
         return next()
     }
+
+    idFolder = idFolder[idFolder.length-1]
 
     FolderController.getFolder(idFolder)
         .then((result) => {
@@ -134,7 +136,7 @@ exports.searchFolder = (req, res, next) => {
     var search = escapeRegExp(req.body.search)
     FolderController.searchFolders(req.body.owner, search)
         .then((result) => {
-            res.status(201).send({folders: result, folders: req.body.folders});
+            res.status(201).send({folders: result, files: req.body.files});
         })
         .catch(err => {
             res.status(403).send({ err: "Error searching folders" })
