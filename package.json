@@ -23,15 +23,18 @@
     "express": "^4.17.1",
     "gridfs-stream": "^1.1.1",
     "jsonwebtoken": "^8.5.1",
+    "lodash.escaperegexp": "^4.1.2",
     "mongoose": "^5.9.7",
     "mongoose-double": "^0.0.1",
     "multer": "^1.4.2",
     "multer-gridfs-storage": "^4.0.3",
     "nodemon": "^2.0.2",
+    "pdfjs-dist": "^2.3.200",
     "rand-token": "^1.0.1",
     "react-bootstrap": "^1.0.0",
     "react-contexify": "^4.1.1",
     "react-context-menu": "^3.0.2",
-    "react-contextmenu": "^2.13.0"
+    "react-contextmenu": "^2.13.0",
+    "react-pdf": "^4.1.0"
   }
 }

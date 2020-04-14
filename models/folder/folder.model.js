@@ -50,3 +50,13 @@ exports.getFolders = (owner, path) => {
 		})
 	})
 }
+
+exports.searchFolders = (owner, search) => {
+	return new Promise((resolve, reject) => {
+		Folder.find({ name: { "$regex": new RegExp("^" + search.toLowerCase(), "i") }, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {})
+			.limit(50).exec(function (err, folder) {
+			if (err) return reject(err)
+			resolve(folder)
+		})
+	})
+}

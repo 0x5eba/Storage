@@ -21,6 +21,8 @@ import 'bootstrap/dist/css/bootstrap.css';
 // import { ToastContainer, toast } from 'react-toastify';
 // import 'react-toastify/dist/ReactToastify.css';
 
+import { Document, Page, pdfjs, Text } from 'react-pdf';
+
 import "./Home.css"
 
 const server_url = 'http://localhost:3001'
@@ -41,9 +43,51 @@ class Home extends Component {
 			showPassword: false,
 			folders: [],
 			files: [],
+			search: "",
+
+			url: null,
+			numPages: 1,
+			currPage: 1,
 		}
 
+		pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+
 		this.getFoldersAndFiles = this.getFoldersAndFiles.bind(this)
+	}
+
+	searchFilesAndFolders = (e) => {
+		this.setState({
+			search: e.target.value
+		}, () => {
+
+			var data = {
+				owner: this.state.owner,
+				token: this.state.token,
+				search: this.state.search,
+			}
+	
+			fetch(server_url + "/api/search", {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(data),
+			})
+				.then(data => data.json())
+				.then(data => {
+					if (data.err === undefined) {
+						this.setState({
+							folders: data.folders,
+							files: data.files,
+						})
+					} else {
+						console.error('Error:', data.err)
+					}
+				})
+				.catch((error) => {
+					console.error('Error:', error)
+				})
+		})
 	}
 
 	getFoldersAndFiles = () => {
@@ -268,16 +312,68 @@ class Home extends Component {
 	}
 
 	clickFile = (props) => {
-		var url = window.location.href
-		if(url[url.length-1] === "/"){
-			url = url.slice(0, -1)
+		// var url = window.location.href
+		// if(url[url.length-1] === "/"){
+		// 	url = url.slice(0, -1)
+		// }
+		// window.location.href = url + "/" + props.idFile
+		
+		var data = {
+			idFile: props.idFile,
+			owner: this.state.owner,
+			token: this.state.token,
 		}
-		window.location.href = url + "/" + props.idFile
+
+		fetch(server_url + "/api/file/getFile", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.blob())
+			.then(data => {
+				console.log(data)
+
+				this.setState({
+					url: URL.createObjectURL(data)
+				}, () => {
+					// window.location.href = this.state.url
+
+					var tempLink = document.createElement('a');
+					tempLink.href = this.state.url;
+					tempLink.setAttribute('download', 'download');
+					tempLink.click();
+				})
+
+				// var reader = new FileReader();
+				// reader.readAsDataURL(data);
+				// reader.onloadend = function () {
+				// 	var base64data = reader.result
+				// 	console.log(base64data)
+				// 	// document.getElementById("img-profile").src = base64data;
+				// 	// document.getElementById("img-profile-edit").src = base64data;
+				// }
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
 	}
 
 	render() {
 		return (
 			<div>
+				{this.state.url !== null && <img src={this.state.url} />}
+
+				{this.state.url !== null && 
+					<Document file={this.state.url} onLoadSuccess={({ numPages }) => this.setState({ 
+						numPages: numPages,
+						currPage: 1 })} onClick={() => this.setState({
+							currPage: this.state.currPage + 1
+						})}>
+						<Page pageNumber={this.state.currPage} />
+					</Document>}
+
 				<Modal show={this.state.showModal} onHide={this.closeModal}
 					size="md"
 					aria-labelledby="contained-modal-title-vcenter"
@@ -372,9 +468,7 @@ class Home extends Component {
 								maxWidth: "600px", 
 								width: "80%", 
 								backgroundColor: "white",
-								}} onChange={(e) => this.setState({
-							search: e.target.value
-						})}/>
+								}} onChange={this.searchFilesAndFolders}/>
 					</div>
 					
 					<div style={{margin: "20px"}}>

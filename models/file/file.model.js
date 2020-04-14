@@ -48,7 +48,7 @@ exports.getFileById = (id) => {
 
 exports.getFile = (idFile) => {
 	return new Promise((resolve, reject) => {
-		File.find({idFile: idFile}, {}, function (err, file) {
+		File.findOne({idFile: idFile}, {}, function (err, file) {
 			if (err) return reject(err)
 			resolve(file)
 		})
@@ -77,9 +77,9 @@ exports.removeFile = (idFile) => {
 }
 
 exports.getFileFormGridfs = (req, res) => { 
-    gfs.files.findOne({ filename: req.body.filename }, (err, file) => { // "metadata.name": req.body.name
+    gfs.files.findOne({ filename: req.body.idFile }, (err, file) => { // "metadata.name": req.body.name
         if (!file || file.length === 0) {
-            return res.status(404).send({ err: "No file exists" });
+            return res.status(404).send({ err: "File doesn't exist" });
         }
 
         const readstream = gfs.createReadStream(file.filename)
@@ -101,4 +101,14 @@ exports.getFiles = (owner, path) => {
 			resolve(file)
 		})
     })
+}
+
+exports.searchFiles = (owner, search) => {
+	return new Promise((resolve, reject) => {
+		File.find({ name: { "$regex": new RegExp("^" + search.toLowerCase(), "i") }, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {})
+			.limit(50).exec(function (err, folder) {
+			if (err) return reject(err)
+			resolve(folder)
+		})
+	})
 }

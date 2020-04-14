@@ -1,5 +1,7 @@
 const FolderController = require('./folder.controller')
 const AuthController = require("../common/middlewares/auth.validation.middleware")
+const FileController = require('../file/file.controller')
+
 
 exports.routesConfig = function (app) {
 	app.post('/api/folder/createFolder', [
@@ -23,5 +25,11 @@ exports.routesConfig = function (app) {
     app.post('/api/folder/getFolders', [
         AuthController.proofToken,
         FolderController.getFolders
+    ]);
+
+    app.post('/api/search', [
+        AuthController.proofToken,
+        FileController.searchFile,
+        FolderController.searchFolder,
     ]);
 }

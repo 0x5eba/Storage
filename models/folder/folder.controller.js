@@ -1,6 +1,7 @@
 const FolderController = require('./folder.model')
 const crypto = require("crypto")
 const bcrypt = require("bcryptjs")
+const escapeRegExp = require('lodash.escaperegexp')
 
 exports.createFolder = (req, res, next) => {
     crypto.randomBytes(16, (err, buf) => {
@@ -119,12 +120,23 @@ exports.checkIfFolderExist = (req, res, next) => {
         })
 }
 
-exports.getFolders = (req, res) => {
+exports.getFolders = (req, res, next) => {
     FolderController.getFolders(req.body.owner, req.body.path)
         .then((result) => {
             res.status(201).send(result);
         })
         .catch(err => {
             res.status(403).send({ err: "Error getting folder" })
+        })
+}
+
+exports.searchFolder = (req, res, next) => {
+    var search = escapeRegExp(req.body.search)
+    FolderController.searchFolders(req.body.owner, search)
+        .then((result) => {
+            res.status(201).send({folders: result, files: req.body.files});
+        })
+        .catch(err => {
+            res.status(403).send({ err: "Error searching folders" })
         })
 }

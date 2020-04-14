@@ -1,5 +1,6 @@
 const FileController = require('./file.model')
 const crypto = require("crypto")
+const escapeRegExp = require('lodash.escaperegexp')
 
 exports.uploadFile = (req, res) => {
 
@@ -22,7 +23,7 @@ exports.getFile = (req, res, next) => {
     FileController.getFile(req.body.idFile)
         .then((result) => {
             if(result !== null){
-                req.body.result = result;
+                req.body.result = result
                 return next()
             } else {
                 res.status(403).send({ err: "Error this file doesn't exist" })
@@ -92,4 +93,16 @@ exports.removeFileWihCheck = (req, res, next) => {
     } else {
         return next()
     }
+}
+
+exports.searchFile = (req, res, next) => {
+    var search = escapeRegExp(req.body.search)
+    FileController.searchFiles(req.body.owner, search)
+        .then((result) => {
+            req.body.files = result
+            return next()
+        })
+        .catch(err => {
+            res.status(403).send({ err: "Error searching files" })
+        })
 }
