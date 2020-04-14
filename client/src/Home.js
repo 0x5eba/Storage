@@ -33,7 +33,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 import "./Home.css"
 
-const server_url = process.env.NODE_ENV === 'production' ? 'https://store.sebastienbiollo.com' : 'http://localhost:3001'
+const server_url = process.env.NODE_ENV === 'production' ? 'https://store.sebastienbiollo.com' : 'http://localhost:5001'
 
 class Home extends Component {
 	constructor(props) {
