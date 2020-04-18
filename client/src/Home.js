@@ -21,7 +21,7 @@ import Typography from '@material-ui/core/Typography';
 import DraftsIcon from '@material-ui/icons/Drafts';
 
 import Modal from 'react-bootstrap/Modal';
-import { Row, Col} from 'reactstrap';
+import { Row, Col } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 
 // import { ToastContainer, toast } from 'react-toastify';
@@ -43,6 +43,7 @@ class Home extends Component {
 			owner: "",
 			token: "",
 			path: window.location.href,
+			parent: "/",
 			name: "",
 			password: "",
 			visible: false,
@@ -52,6 +53,7 @@ class Home extends Component {
 			folders: [],
 			files: [],
 			search: "",
+			viewLink: null,
 
 			url: null,
 			downloading: false,
@@ -60,6 +62,7 @@ class Home extends Component {
 			mouseX: null,
 			mouseY: null,
 			isFile: false,
+			infos: null,
 		}
 
 
@@ -76,7 +79,7 @@ class Home extends Component {
 				token: this.state.token,
 				search: this.state.search,
 			}
-	
+
 			fetch(server_url + "/api/search", {
 				method: 'POST',
 				headers: {
@@ -101,16 +104,67 @@ class Home extends Component {
 		})
 	}
 
+	getSharedFile = () => {
+		var data = {
+			link: this.state.viewLink,
+			path: this.state.path,
+			owner: this.state.owner,
+			token: this.state.token,
+		}
+
+		fetch(server_url + "/api/file/getSharedFile", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				if (data.err === undefined) {
+					this.setState({
+						files: [data]
+					})
+				} else {
+					console.error('Error:', data.err)
+				}
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+	}
+
 	getFoldersAndFiles = () => {
 
-		if(this.state.path.includes("folder")){
+		if (this.state.path.includes("folder")) {
 			// query per prendere prendere quel folder e i file in quel folder, 
 			// potendo visualizzare tutto, e quelli con la password devono sempre richiederla
+
+			var viewLink = this.state.path.split('/folder/')
+			viewLink = viewLink[viewLink.length - 1]
+
+			this.setState({
+				viewLink: viewLink,
+				path: "/" + viewLink
+			}, () => {
+				this.getFoldersAndFiles()
+			})
+
 			return
 		}
 
-		if(this.state.path.includes("file")){
+		if (this.state.path.includes("file")) {
 			// query per prendere solo quel file, e metterlo in this.state.files
+
+			var viewLink = this.state.path.split('/file/')
+			viewLink = viewLink[viewLink.length - 1]
+
+			this.setState({
+				viewLink: viewLink,
+			}, () => {
+				this.getSharedFile()
+			})
+
 			return
 		}
 
@@ -164,7 +218,7 @@ class Home extends Component {
 	}
 
 	sha256 = async (message) => {
-		const msgBuffer = new TextEncoder('utf-8').encode(message)    
+		const msgBuffer = new TextEncoder('utf-8').encode(message)
 		const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
 		const hashArray = Array.from(new Uint8Array(hashBuffer))
 		const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('')
@@ -209,7 +263,7 @@ class Home extends Component {
 	}
 
 	createFolder = () => {
-		if(this.state.name.length === 0){
+		if (this.state.name.length === 0) {
 			message.error(`Insert a name please\n`);
 			return
 		}
@@ -295,14 +349,14 @@ class Home extends Component {
 			name: "",
 			password: "",
 			showPassword: false,
-		}, () => {})
+		}, () => { })
 	}
 
 	openModalPassword = () => {
 		this.setState({
 			showModalPassword: true,
 			password: "",
-		}, () => {})
+		}, () => { })
 	}
 
 	closeModal = () => {
@@ -310,11 +364,11 @@ class Home extends Component {
 			showModal: false,
 			showModalPasswod: false,
 			showModalFile: false,
-		}, () => {})
+		}, () => { })
 	}
 
-	clickFolder = (props, showModel=true) => {
-		if(props.password.length === 0){
+	clickFolder = (props, showModel = true) => {
+		if (props.password.length === 0) {
 			window.location.href = "/" + props.idFolder
 		} else {
 			// modal per la password
@@ -326,7 +380,7 @@ class Home extends Component {
 		}
 	}
 
-	clickFile = (props, showModel=true) => {
+	clickFile = (props, showModel = true) => {
 		var data = {
 			idFile: props.idFile,
 			owner: this.state.owner,
@@ -356,12 +410,12 @@ class Home extends Component {
 					}, () => {
 
 
-						if(this.state.viewFileClicked === true){
+						if (this.state.viewFileClicked === true) {
 							this.setState({
 								viewFileClicked: false
 							})
 							this.viewFile()
-						} else if(this.state.downloadFileClicked === true){
+						} else if (this.state.downloadFileClicked === true) {
 							this.setState({
 								downloadFileClicked: false
 							})
@@ -378,7 +432,7 @@ class Home extends Component {
 	}
 
 	viewFile = () => {
-		if(this.state.downloading === false){
+		if (this.state.downloading === false) {
 			window.location.href = this.state.url
 		} else {
 			this.setState({
@@ -394,8 +448,35 @@ class Home extends Component {
 		})
 	}
 
+	getShareLinkFile = () => {
+		var text = server_url + "/file/" + this.state.infos.linkView
+
+		if (!navigator.clipboard) {
+			var textArea = document.createElement("textarea")
+			textArea.value = text
+			document.body.appendChild(textArea)
+			textArea.focus()
+			textArea.select()
+			try {
+				var successful = document.execCommand('copy');
+				var msg = successful ? 'successful' : 'unsuccessful';
+				console.log(msg)
+				message.success("Link copied to clipboard!")
+			} catch (err) {
+				message.error("Failed to copy")
+			}
+			document.body.removeChild(textArea)
+			return
+		}
+		navigator.clipboard.writeText(text).then(function () {
+			message.success("Link copied to clipboard!")
+		}, function (err) {
+			message.error("Failed to copy")
+		})
+	}
+
 	downloadFile = () => {
-		if(this.state.downloading === false){
+		if (this.state.downloading === false) {
 			var link = document.createElement('a')
 			link.href = this.state.url
 			link.setAttribute('download', this.state.name)
@@ -415,7 +496,7 @@ class Home extends Component {
 		}
 		var url = "/api/folder/deleteFolder"
 
-		if(this.state.isFile === true){
+		if (this.state.isFile === true) {
 			data = {
 				idFile: this.state.id,
 				owner: this.state.owner,
@@ -433,7 +514,7 @@ class Home extends Component {
 		})
 			.then(data => data.json())
 			.then(data => {
-				if(data.err === undefined){
+				if (data.err === undefined) {
 					message.success(`${this.state.isFile === true ? "File" : "Folder"} deleted`)
 					this.getFoldersAndFiles()
 				} else {
@@ -458,23 +539,24 @@ class Home extends Component {
 						})}>
 						<Page pageNumber={this.state.currPage} />
 					</Document>} */}
-				
+
 				<Menu
 					keepMounted
 					open={this.state.mouseY !== null}
 					onClose={this.closeMenu}
 					anchorReference="anchorPosition"
 					anchorPosition={
-					this.state.mouseY !== null && this.state.mouseX !== null
-						? { top: this.state.mouseY, left: this.state.mouseX }
-						: undefined
+						this.state.mouseY !== null && this.state.mouseX !== null
+							? { top: this.state.mouseY, left: this.state.mouseX }
+							: undefined
 					}
-				>	
-					{this.state.isFile === true ? 
-						<div style={{width: "250px"}}>
+				>
+					{this.state.isFile === true ?
+						<div style={{ width: "250px" }}>
 							<MenuItem onClick={() => {
 								this.remove()
-								this.closeMenu()}}> 
+								this.closeMenu()
+							}}>
 								<ListItemIcon>
 									<DraftsIcon fontSize="small" />
 								</ListItemIcon>
@@ -484,7 +566,8 @@ class Home extends Component {
 							</MenuItem>
 							<MenuItem onClick={() => {
 								this.downloadFile()
-								this.closeMenu()}}> 
+								this.closeMenu()
+							}}>
 								<ListItemIcon>
 									<DraftsIcon fontSize="small" />
 								</ListItemIcon>
@@ -493,23 +576,25 @@ class Home extends Component {
 								</Typography>
 							</MenuItem>
 							<MenuItem onClick={() => {
-								this.downloadFile()
-								this.closeMenu()}}> 
+								this.getShareLinkFile()
+								this.closeMenu()
+							}}>
 								<ListItemIcon>
 									<DraftsIcon fontSize="small" />
 								</ListItemIcon>
 								<Typography variant="inherit" noWrap>
-									Share file
+									Get share link
 								</Typography>
 							</MenuItem>
 							{/* <MenuItem onClick={}>Rename</MenuItem> */}
 
 						</div>
 						:
-						<div style={{width: "250px"}}>
+						<div style={{ width: "250px" }}>
 							<MenuItem onClick={() => {
 								this.remove()
-								this.closeMenu()}}> 
+								this.closeMenu()
+							}}>
 								<ListItemIcon>
 									<DraftsIcon fontSize="small" />
 								</ListItemIcon>
@@ -520,23 +605,23 @@ class Home extends Component {
 						</div>
 					}
 				</Menu>
-				
+
 
 				<Modal show={this.state.showModal} onHide={this.closeModal}
 					size="md"
 					aria-labelledby="contained-modal-title-vcenter"
 					centered>
 					<Modal.Header closeButton>
-					<Modal.Title id="contained-modal-title-vcenter">
-						New Folder
+						<Modal.Title id="contained-modal-title-vcenter">
+							New Folder
 					</Modal.Title>
 					</Modal.Header>
 					<Modal.Body>
-						<div style={{paddingLeft: "30px", paddingRight: "30px"}}>
+						<div style={{ paddingLeft: "30px", paddingRight: "30px" }}>
 							<div>
 								<InputAntd placeholder="Folder name" onChange={(e) => this.setState({
 									name: e.target.value
-								})}/>
+								})} />
 							</div>
 							<div>
 								<FormControlLabel
@@ -545,13 +630,13 @@ class Home extends Component {
 										<Checkbox color="primary" onClick={() => this.setState({
 											showPassword: !this.state.showPassword
 										})}
-									/>}
+										/>}
 									label="Password"
 								/>
-								{this.state.showPassword === true ? 
+								{this.state.showPassword === true ?
 									<InputAntd placeholder="Password" type="password" onChange={(e) => this.setState({
 										password: e.target.value
-									})}/>
+									})} />
 									: null}
 							</div>
 							<div>
@@ -561,19 +646,20 @@ class Home extends Component {
 										<Checkbox color="primary" onClick={() => this.setState({
 											visible: !this.state.visible
 										})}
-									/>}
+										/>}
 									label="Visible to everyone"
 								/>
 							</div>
 						</div>
-						
+
 					</Modal.Body>
 					<Modal.Footer>
-						<Button variant="contained" style={{ backgroundColor: "white"}} onClick={this.closeModal} >Cancel</Button>
-						<Button variant="contained" style={{ 
-							backgroundColor: "#4caf50", 
-							marginLeft: "20px", 
-							marginRight: "20px"}} 
+						<Button variant="contained" style={{ backgroundColor: "white" }} onClick={this.closeModal} >Cancel</Button>
+						<Button variant="contained" style={{
+							backgroundColor: "#4caf50",
+							marginLeft: "20px",
+							marginRight: "20px"
+						}}
 							onClick={this.createFolder}>Create</Button>
 					</Modal.Footer>
 				</Modal>
@@ -583,23 +669,24 @@ class Home extends Component {
 					aria-labelledby="contained-modal-title-vcenter"
 					centered>
 					<Modal.Header closeButton>
-					<Modal.Title id="contained-modal-title-vcenter">
-						Password Folder
+						<Modal.Title id="contained-modal-title-vcenter">
+							Password Folder
 					</Modal.Title>
 					</Modal.Header>
 					<Modal.Body>
-						<div style={{paddingLeft: "30px", paddingRight: "30px"}}>
+						<div style={{ paddingLeft: "30px", paddingRight: "30px" }}>
 							<InputAntd placeholder="Password" type="password" onChange={(e) => this.setState({
 								password: e.target.value
-							})}/>
+							})} />
 						</div>
 					</Modal.Body>
 					<Modal.Footer>
-						<Button variant="contained" style={{ backgroundColor: "white"}} onClick={this.closeModal} >Cancel</Button>
-						<Button variant="contained" style={{ 
-							backgroundColor: "#4caf50", 
-							marginLeft: "20px", 
-							marginRight: "20px"}} 
+						<Button variant="contained" style={{ backgroundColor: "white" }} onClick={this.closeModal} >Cancel</Button>
+						<Button variant="contained" style={{
+							backgroundColor: "#4caf50",
+							marginLeft: "20px",
+							marginRight: "20px"
+						}}
 							onClick={this.accessFolder}>Access</Button>
 					</Modal.Footer>
 				</Modal>
@@ -609,99 +696,104 @@ class Home extends Component {
 					aria-labelledby="contained-modal-title-vcenter"
 					centered>
 					<Modal.Header closeButton>
-					<Modal.Title id="contained-modal-title-vcenter">
-						{`File ${this.state.name}`}
-					</Modal.Title>
+						<Modal.Title id="contained-modal-title-vcenter">
+							{`File ${this.state.name}`}
+						</Modal.Title>
 					</Modal.Header>
 					<Modal.Body>
-						<div style={{paddingLeft: "30px", paddingRight: "30px", textAlign: "center"}}>
-							<Button variant="contained" style={{ backgroundColor: "#ef5350"}} onClick={this.viewFile}>View</Button>
-							<Button variant="contained" style={{ 
-								backgroundColor: "#4caf50", marginLeft: "20px", marginRight: "20px"}} 
+						<div style={{ paddingLeft: "30px", paddingRight: "30px", textAlign: "center" }}>
+							<Button variant="contained" style={{ backgroundColor: "#ef5350" }} onClick={this.viewFile}>View</Button>
+							<Button variant="contained" style={{
+								backgroundColor: "#4caf50", marginLeft: "20px", marginRight: "20px"
+							}}
 								onClick={this.downloadFile}>Download</Button>
 						</div>
 					</Modal.Body>
 				</Modal>
-			
+
 				<div className="container">
 					<div>
-						<TextField label="Search" type="search" variant="outlined" 
+						<TextField label="Search" type="search" variant="outlined"
 							style={{
 								margin: "20px",
-								marginBottom: "0px", 
-								maxWidth: "600px", 
-								width: "80%", 
+								marginBottom: "0px",
+								maxWidth: "600px",
+								width: "80%",
 								backgroundColor: "white",
-								}} onChange={this.searchFilesAndFolders}/>
+							}} onChange={this.searchFilesAndFolders} />
 					</div>
-					
-					<div style={{margin: "20px"}}>
+
+					<div style={{ margin: "20px" }}>
 						<Upload {...{
-								name: 'file',
-								action: server_url + '/api/file/uploadFile',
-								beforeUpload(file, fileList) {
-									var files = fileList
-									let size = 16000000
-									for (var a = 0; a < files.length; a++) {
-										if (files[a].size > size) {
-											message.error(`${files[a].name} is too large, please pick a smaller file\n`);
-											return false
-										}
+							name: 'file',
+							action: server_url + '/api/file/uploadFile',
+							beforeUpload(file, fileList) {
+								var files = fileList
+								let size = 16000000
+								for (var a = 0; a < files.length; a++) {
+									if (files[a].size > size) {
+										message.error(`${files[a].name} is too large, please pick a smaller file\n`);
+										return false
 									}
-									return true
-								},
-								data: {
-									owner: this.state.owner,
-									token: this.state.token,
-									path: this.state.path,
-									// password: this.state.password,
-									// visibleToEveryone: this.state.visible,
-								},
-								showUploadList: false,
-								onChange: this.showInfoFile
-							}}>
-							<Button 
+								}
+								return true
+							},
+							data: {
+								owner: this.state.owner,
+								token: this.state.token,
+								path: this.state.path,
+								// password: this.state.password,
+								// visibleToEveryone: this.state.visible,
+							},
+							showUploadList: false,
+							onChange: this.showInfoFile
+						}}>
+							<Button
 								variant="contained"
 								className="buttons-folders"
-								style={{ 
-									textAlign: "left", 
+								style={{
+									textAlign: "left",
 									justifyContent: "left",
 									backgroundColor: "#2196f3",
 									borderRadius: "7px",
-									width: "auto"}}
+									width: "auto"
+								}}
 								startIcon={<UploadOutlined />}>
-						 		Upload File
+								Upload File
 							</Button>
 						</Upload>
 
-						<Button 
+						<Button
 							variant="contained"
 							className="buttons-folders"
 							style={{
-								textAlign: "left", 
-								justifyContent: "left", 
+								textAlign: "left",
+								justifyContent: "left",
 								backgroundColor: "#ff9800",
-								borderRadius: "7px", 
-								marginLeft: "20px", 
-								width: "auto"}}
-							startIcon={<FolderAddOutlined />} 
+								borderRadius: "7px",
+								marginLeft: "20px",
+								width: "auto"
+							}}
+							startIcon={<FolderAddOutlined />}
 							onClick={this.openModal}>
 							Create Folder
 						</Button>
 					</div>
-					
-					<Row style={{maxHeight: "230px", overflow: "auto", overflowY: "scroll"}}>
+
+					<Row style={{ maxHeight: "230px", overflow: "auto", overflowY: "scroll" }}>
 						{this.state.folders.map((item) => {
 							return (
 								<Col className="folders" key={item._id}>
 									<Button
 										variant="contained"
 										className="buttons-folders"
-										style={{textTransform: 'none', backgroundColor: "white", textAlign: "left", justifyContent: "left", 
-											borderRadius: "7px", fontSize: "17px", paddingLeft: "20px"}}
-										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" style={{marginRight: "10px"}} /> : 
-											(item.visibleToEveryone === true ? <FolderSharedIcon className="icons"  style={{marginRight: "10px"}} /> : 
-												<FolderIcon className="icons"  style={{marginRight: "10px"}} />))}
+										style={{
+											textTransform: 'none', backgroundColor: "white", textAlign: "left", justifyContent: "left",
+											borderRadius: "7px", fontSize: "17px", paddingLeft: "20px"
+										}}
+										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" style={{ marginRight: "10px" }} /> :
+											(item.visibleToEveryone === true ? <FolderSharedIcon className="icons" style={{ marginRight: "10px" }} /> :
+												<FolderIcon className="icons" style={{ marginRight: "10px" }} />))}
 										onContextMenu={(e) => {
 											e.preventDefault()
 											this.setState({
@@ -710,6 +802,7 @@ class Home extends Component {
 												id: item.idFolder,
 												isFile: false,
 												name: item.name,
+												infos: item,
 											})
 										}}
 										onClick={() => this.clickFolder(item)}
@@ -725,7 +818,7 @@ class Home extends Component {
 
 					<Divider />
 
-					<Row style={{overflow: "auto", overflowY: "scroll"}}>
+					<Row style={{ overflow: "auto", overflowY: "scroll" }}>
 						{this.state.files.map((item) => {
 							return (
 								<Col className="files" key={item._id}>
@@ -733,10 +826,12 @@ class Home extends Component {
 										props={item}
 										variant="contained"
 										className="buttons-files"
-										style={{textTransform: 'none', backgroundColor: "white", textAlign: "left", 
-											justifyContent: "left", fontSize: "17px", paddingLeft: "20px"}}
-										startIcon={(item.password.length !== 0 ? <LockIcon className="icons"  style={{marginRight: "10px"}} /> : 
-											<DescriptionIcon className="icons"  style={{marginRight: "10px"}}/>)}
+										style={{
+											textTransform: 'none', backgroundColor: "white", textAlign: "left",
+											justifyContent: "left", fontSize: "17px", paddingLeft: "20px"
+										}}
+										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" style={{ marginRight: "10px" }} /> :
+											<DescriptionIcon className="icons" style={{ marginRight: "10px" }} />)}
 										onContextMenu={(e) => {
 											e.preventDefault()
 											this.setState({
@@ -744,6 +839,7 @@ class Home extends Component {
 												mouseY: e.clientY - 4,
 												id: item.idFile,
 												isFile: true,
+												infos: item,
 											}, () => this.clickFile(item, false))
 										}}
 										onClick={() => this.clickFile(item)}

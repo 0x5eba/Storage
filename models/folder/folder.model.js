@@ -6,10 +6,12 @@ const FolderModel = new mongoose.Schema({
     idFolder: { type: String, trim: true, default: "", require: true },
     owner: { type: String, trim: true, default: "", require: true }, // e' un token
     name: { type: String, trim: true, default: "", require: true }, // nome folder con estenzione
-    path: { type: String, trim: true, default: "", require: true },
+	parent: { type: String, trim: true, default: "", require: true }, // idFolder del parent
+	path: { type: String, trim: true, default: "", require: true },
     password: { type: String, trim: true, default: "" }, // se password !== '' allora devi passargli password per vederlo o essere l'owner
-    linkView: { type: String, trim: true, default: "" }, // _id + random_string
-    visibleToEveryone: { type: Boolean, default: false },
+	linkView: { type: String, trim: true, default: "" }, // _id + random_string
+	parentsLinksView: [{ type: String, trim: true, default: "" }],
+	visibleToEveryone: { type: Boolean, default: false },
 })
 
 const Folder = mongoose.model('Folder', FolderModel, 'Folder')

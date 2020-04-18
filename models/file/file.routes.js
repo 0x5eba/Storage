@@ -25,6 +25,11 @@ exports.routesConfig = function (app) {
         FileController.getFileFormGridfs,
     ]);
 
+    app.post('/api/file/getSharedFile', [
+        AuthController.proofToken,
+        FileController.getFileSharedLink,
+    ]);
+
     app.get('/api/file/getFile/:id', [
         AuthController.proofToken,
         FileController.getFileById,

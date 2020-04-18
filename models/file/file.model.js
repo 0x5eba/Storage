@@ -139,3 +139,12 @@ exports.isOwner = (owner, idFile) => {
 		})
 	})
 }
+
+exports.getSharedFile = (link) => {
+	return new Promise((resolve, reject) => {
+		File.findOne({ linkView: link }, {}, function (err, folder) {
+			if (err) return reject(err)
+			resolve(folder)
+		})
+	})
+}

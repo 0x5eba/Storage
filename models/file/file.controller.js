@@ -136,3 +136,13 @@ exports.isOwner = (req, res, next) => {
             res.status(403).send({ err: "Error deleting file" })
         })
 }
+
+exports.getFileSharedLink = (req, res, next) => {
+    FileController.getSharedFile(req.body.link)
+        .then((result) => {
+            res.status(201).send(result);
+        })
+        .catch(err => {
+            res.status(403).send({ err: "Error getting file" })
+        })
+}
