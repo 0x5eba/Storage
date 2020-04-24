@@ -26,36 +26,27 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 import Note from './Note'
 
-// import { ToastContainer, toast } from 'react-toastify';
-// import 'react-toastify/dist/ReactToastify.css';
-
-// import { Document, Page, pdfjs, Text } from 'react-pdf';
-// // pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
-
-
 import "./Home.css"
-
-const server_url = process.env.NODE_ENV === 'production' ? 'https://store.sebastienbiollo.com' : 'http://localhost:5001'
 
 class Home extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			id: "",
 			owner: "",
 			token: "",
 			path: window.location.href,
-			parent: "/",
 			name: "",
 			password: "",
 			visible: false,
 			showModal: false,
-			showModalPasswod: false,
+			showModalPassword: false,
 			showPassword: false,
 			folders: [],
 			files: [],
 			search: "",
-			viewLink: null,
+            viewLink: null,
+			passwords: [],
+			modifyFolder: false,
 
 			url: null,
 			downloading: false,
@@ -65,97 +56,53 @@ class Home extends Component {
 			mouseY: null,
 			isFile: false,
 			infos: null,
-		}
 
+			searchFolders: [],
+			searchFiles: [],
+		}
 
 		this.getFoldersAndFiles = this.getFoldersAndFiles.bind(this)
-	}
-
-	searchFilesAndFolders = (e) => {
-		this.setState({
-			search: e.target.value
-		}, () => {
-
-			var data = {
-				owner: this.state.owner,
-				token: this.state.token,
-				search: this.state.search,
-			}
-
-			fetch(server_url + "/api/search", {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(data),
+    }
+    
+    UNSAFE_componentWillMount = () => {
+        if(window.sessionStorage.getItem("passwords") === null) {
+            window.sessionStorage.setItem("passwords", JSON.stringify([]))
+            this.setState({
+				passwords: [],
 			})
-				.then(data => data.json())
-				.then(data => {
-					if (data.err === undefined) {
-						this.setState({
-							folders: data.folders,
-							files: data.files,
-						})
-					} else {
-						message.error(data.err)
-					}
-				})
-				.catch((error) => {
-					console.error('Error:', error)
-				})
-		})
-	}
-
-	getSharedFile = () => {
-		var data = {
-			link: this.state.viewLink,
-			path: this.state.path,
-			owner: this.state.owner,
-			token: this.state.token,
-		}
-
-		fetch(server_url + "/api/file/getSharedFile", {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(data),
-		})
-			.then(data => data.json())
-			.then(data => {
-				if (data.err === undefined) {
-					this.setState({
-						files: [data]
-					})
-				} else {
-					console.error('Error:', data.err)
-				}
+        } else {
+            this.setState({
+				passwords: JSON.parse(window.sessionStorage.getItem("passwords")),
 			})
-			.catch((error) => {
-				console.error('Error:', error)
-			})
-	}
-
-	getFoldersAndFiles = () => {
-
-		if (this.state.path.includes("folder")) {
-			// query per prendere prendere quel folder e i file in quel folder, 
-			// potendo visualizzare tutto, e quelli con la password devono sempre richiederla
-
-			var viewLink = this.state.path.split('/folder/')
-			viewLink = viewLink[viewLink.length - 1]
-
+        }
+		if (window.localStorage.getItem("owner") !== null && window.localStorage.getItem("token") !== null) {
 			this.setState({
-				viewLink: viewLink,
-				path: "/" + viewLink
+				owner: window.localStorage.getItem("owner"),
+				token: window.localStorage.getItem("token")
 			}, () => {
 				this.getFoldersAndFiles()
 			})
-
-			return
+		} else {
+			var token = this.generate_token(32)
+			this.sha256(token)
+				.then((proofToken) => {
+					this.setState({
+						owner: proofToken,
+						token: token
+					}, () => {
+						window.localStorage.setItem("owner", this.state.owner)
+						window.localStorage.setItem("token", this.state.token)
+						this.getFoldersAndFiles()
+					})
+				})
+				.catch((e) => {
+					console.log(e)
+				})
 		}
+	}
 
-		if (this.state.path.includes("file")) {
+	getFoldersAndFiles = () => {
+		if (this.state.path.includes("/file/")) {
 			// query per prendere solo quel file, e metterlo in this.state.files
 
 			var viewLink = this.state.path.split('/file/')
@@ -171,12 +118,13 @@ class Home extends Component {
 		}
 
 		var data = {
-			path: this.state.path,
+			parent: this.getParent(),
 			owner: this.state.owner,
-			token: this.state.token,
-		}
+            token: this.state.token,
+            passwords: this.state.passwords,
+        }
 
-		fetch(server_url + "/api/folder/getFolders", {
+		fetch("/api/folder/getFolders", {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -186,9 +134,13 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-					this.setState({
-						folders: data
-					})
+                    if(data.passwordRequired === true){
+                        this.openModalPassword()
+                    } else {
+                        this.setState({
+                            folders: data
+                        })
+                    }
 				} else {
 					console.error('Error:', data.err)
 				}
@@ -197,7 +149,8 @@ class Home extends Component {
 				console.error('Error:', error)
 			})
 
-		fetch(server_url + "/api/file/getFiles", {
+
+		fetch("/api/file/getFiles", {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -235,49 +188,34 @@ class Home extends Component {
 			b[i] = a[j]
 		}
 		return b.join("")
-	}
+    }
+    
+    getParent = () => {
+        var parent = this.state.path.split("/")
+        parent = parent[parent.length-1]
 
-	UNSAFE_componentWillMount = () => {
-		if (window.localStorage.getItem("owner") !== null && window.localStorage.getItem("token") !== null) {
-			this.setState({
-				owner: window.localStorage.getItem("owner"),
-				token: window.localStorage.getItem("token")
-			}, () => {
-				this.getFoldersAndFiles()
-			})
-		} else {
-			var token = this.generate_token(32)
-			this.sha256(token)
-				.then((proofToken) => {
-					this.setState({
-						owner: proofToken,
-						token: token
-					}, () => {
-						window.localStorage.setItem("owner", this.state.owner)
-						window.localStorage.setItem("token", this.state.token)
-						this.getFoldersAndFiles()
-					})
-				})
-				.catch((e) => {
-					console.log(e)
-				})
-		}
-	}
+        if(parent.length === 0){
+            parent = "/"
+        }
+
+        return parent
+    }
 
 	createFolder = () => {
 		if (this.state.name.length === 0) {
 			message.error(`Insert a name please\n`);
 			return
-		}
+        }
+        
 		var data = {
 			owner: this.state.owner,
 			token: this.state.token,
-			path: this.state.path,
+			parent: this.getParent(),
 			name: this.state.name,
 			password: this.state.password,
 			visibleToEveryone: this.state.visible,
 		}
-		fetch(server_url + "/api/folder/createFolder", {
+		fetch("/api/folder/createFolder", {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -287,9 +225,8 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-					console.log(data)
 					this.getFoldersAndFiles()
-					message.success(`${data.name} folder uploaded successfully`);
+					message.success(`${this.state.name} folder uploaded successfully`);
 				} else {
 					message.error(`Folder upload failed.`)
 				}
@@ -304,15 +241,130 @@ class Home extends Component {
 	}
 
 	accessFolder = () => {
-		var data = {
-			idFolder: this.state.id,
-			owner: this.state.owner,
-			token: this.state.token,
-			path: this.state.path,
-			name: this.state.name,
+        var data = {
+            owner: this.state.owner,
+            token: this.state.token,
+            idFolder: this.getParent(),
+            parent: this.getParent(),
 			password: this.state.password,
 		}
-		fetch(server_url + "/api/folder/getFolder", {
+		fetch("/api/folder/getFolderWithPassword", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				if (data.err === undefined) {
+                    
+                    // salva la password in sessionStorage
+                    var newPasswords = [...this.state.passwords, this.state.password]
+                    window.sessionStorage.setItem("passwords", JSON.stringify(newPasswords))
+
+					this.setState({
+                        showModalPassword: false,
+                        folders: data,
+                        passwords: newPasswords,
+					})
+				} else {
+					message.error(data.err)
+				}
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+    }
+    
+    getShareLinkFolder = () => {
+        var path = this.state.path.split("/")
+        path.pop()
+        path = path.join("/") + "/"
+
+        var text = path + this.state.infos.idFolder
+
+        if (!navigator.clipboard) {
+			var textArea = document.createElement("textarea")
+			textArea.value = text
+			document.body.appendChild(textArea)
+			textArea.focus()
+			textArea.select()
+			try {
+				var successful = document.execCommand('copy');
+				var msg = successful ? 'successful' : 'unsuccessful';
+				console.log(msg)
+				message.success("Link copied to clipboard!")
+			} catch (err) {
+				message.error("Failed to copy")
+			}
+			document.body.removeChild(textArea)
+			return
+		}
+		navigator.clipboard.writeText(text).then(function () {
+			message.success("Link copied to clipboard!")
+		}, function (err) {
+			message.error("Failed to copy")
+        })
+	}
+
+	modifyFolder = () => {
+		if (this.state.name.length === 0) {
+			message.error(`Insert a name please\n`);
+			return
+        }
+        
+		var data = {
+			owner: this.state.owner,
+			token: this.state.token,
+			idFolder: this.state.infos.idFolder,
+			name: this.state.name,
+			password: this.state.password,
+			visibleToEveryone: this.state.visible,
+		}
+		fetch("/api/folder/modifyFolder", {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				console.log(data)
+				if (data.err === undefined) {
+					this.getFoldersAndFiles()
+					message.success(`${this.state.name} folder updated successfully`);
+				} else {
+					message.error(`Folder update failed.`)
+				}
+
+				this.setState({
+					showModal: false,
+				})
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+	}
+	
+	searchFilesAndFolders = (e) => {
+		this.setState({
+			search: e.target.value
+		}, () => {
+
+			
+		})
+	}
+
+	getSharedFile = () => {
+		var data = {
+			link: this.state.viewLink,
+			owner: this.state.owner,
+			token: this.state.token,
+		}
+
+		fetch("/api/file/getSharedFile", {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -323,12 +375,10 @@ class Home extends Component {
 			.then(data => {
 				if (data.err === undefined) {
 					this.setState({
-						showModalPasswod: false,
-					}, () => {
-						window.location.href = "/" + this.state.id
+						files: [data]
 					})
 				} else {
-					message.error(data.err)
+					console.error('Error:', data.err)
 				}
 			})
 			.catch((error) => {
@@ -336,7 +386,51 @@ class Home extends Component {
 			})
 	}
 
-	showInfoFile = (info) => {
+	getShareLinkFile = () => {
+		var path = this.state.path.split("/")
+        path.pop()
+        path = path.join("/") + "/"
+
+        var text = path + "file/" + this.state.infos.linkView
+
+		if (!navigator.clipboard) {
+			var textArea = document.createElement("textarea")
+			textArea.value = text
+			document.body.appendChild(textArea)
+			textArea.focus()
+			textArea.select()
+			try {
+				var successful = document.execCommand('copy');
+				var msg = successful ? 'successful' : 'unsuccessful';
+				console.log(msg)
+				message.success("Link copied to clipboard!")
+			} catch (err) {
+				message.error("Failed to copy")
+			}
+			document.body.removeChild(textArea)
+			return
+		}
+		navigator.clipboard.writeText(text).then(function () {
+			message.success("Link copied to clipboard!")
+		}, function (err) {
+			message.error("Failed to copy")
+		})
+	}
+
+	downloadFile = () => {
+		if (this.state.downloading === false) {
+			var link = document.createElement('a')
+			link.href = this.state.url
+			link.setAttribute('download', this.state.name)
+			link.click()
+		} else {
+			this.setState({
+				downloadFileClicked: true,
+			})
+		}
+	}
+
+	showMessageUploadFile = (info) => {
 		if (info.file.status === 'done') {
 			message.success(`${info.file.name} file uploaded successfully`);
 			this.getFoldersAndFiles()
@@ -345,57 +439,24 @@ class Home extends Component {
 		}
 	}
 
-	openModal = () => {
-		this.setState({
-			showModal: true,
-			name: "",
-			password: "",
-			showPassword: false,
-		}, () => { })
+	clickFolder = () => {
+		window.location.href = "/" + this.state.infos.idFolder
 	}
 
-	openModalPassword = () => {
-		this.setState({
-			showModalPassword: true,
-			password: "",
-		}, () => { })
-	}
-
-	closeModal = () => {
-		this.setState({
-			showModal: false,
-			showModalPasswod: false,
-			showModalFile: false,
-		}, () => { })
-	}
-
-	clickFolder = (props, showModel = true) => {
-		if (props.password.length === 0) {
-			window.location.href = "/" + props.idFolder
-		} else {
-			// modal per la password
-			this.setState({
-				id: props.idFolder,
-				name: props.name,
-				showModalPasswod: showModel,
-			})
-		}
-	}
-
-	clickFile = (props, showModel = true) => {
+	clickFile = (showModel=true) => {
 		var data = {
-			idFile: props.idFile,
+			idFile: this.state.infos.idFile,
 			owner: this.state.owner,
 			token: this.state.token,
 		}
 
 		this.setState({
-			name: props.name,
+			name: this.state.infos.name,
 			showModalFile: showModel,
 			downloading: true,
 		})
 
-		fetch(server_url + "/api/file/getFile", {
+		fetch("/api/file/getFile", {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -443,6 +504,44 @@ class Home extends Component {
 		}
 	}
 
+	openModal = (modifyFolder=false) => {
+		if(modifyFolder === true){
+			this.setState({
+				showModal: true,
+				modifyFolder: modifyFolder,
+				name: this.state.infos.name,
+				password: this.state.infos.password,
+				visible: this.state.infos.visibleToEveryone,
+				showPassword: this.state.infos.password.length > 0 ? true : false,
+			}, () => { })
+		} else {
+			this.setState({
+				showModal: true,
+				modifyFolder: modifyFolder,
+				name: "",
+				visible: false,
+				password: "",
+				showPassword: false,
+			}, () => { })
+		}
+	}
+
+	openModalPassword = () => {
+		this.setState({
+			showModalPassword: true,
+			password: "",
+		}, () => { })
+	}
+
+	closeModal = () => {
+		this.setState({
+			showModal: false,
+			modifyFolder: false,
+			showModalPassword: false,
+			showModalFile: false,
+		}, () => { })
+	}
+
 	closeMenu = () => {
 		this.setState({
 			mouseX: null,
@@ -450,64 +549,24 @@ class Home extends Component {
 		})
 	}
 
-	getShareLinkFile = () => {
-		var text = server_url + "/file/" + this.state.infos.linkView
-
-		if (!navigator.clipboard) {
-			var textArea = document.createElement("textarea")
-			textArea.value = text
-			document.body.appendChild(textArea)
-			textArea.focus()
-			textArea.select()
-			try {
-				var successful = document.execCommand('copy');
-				var msg = successful ? 'successful' : 'unsuccessful';
-				console.log(msg)
-				message.success("Link copied to clipboard!")
-			} catch (err) {
-				message.error("Failed to copy")
-			}
-			document.body.removeChild(textArea)
-			return
-		}
-		navigator.clipboard.writeText(text).then(function () {
-			message.success("Link copied to clipboard!")
-		}, function (err) {
-			message.error("Failed to copy")
-		})
-	}
-
-	downloadFile = () => {
-		if (this.state.downloading === false) {
-			var link = document.createElement('a')
-			link.href = this.state.url
-			link.setAttribute('download', this.state.name)
-			link.click()
-		} else {
-			this.setState({
-				downloadFileClicked: true,
-			})
-		}
-	}
-
 	remove = () => {
 		var data = {
-			idFolder: this.state.id,
+			idFolder: this.state.infos.idFolder,
 			owner: this.state.owner,
 			token: this.state.token,
 		}
-		var url = "/api/folder/deleteFolder"
+		var url = "/api/folder/deleteFolders"
 
 		if (this.state.isFile === true) {
 			data = {
-				idFile: this.state.id,
+				idFile: this.state.infos.idFile,
 				owner: this.state.owner,
 				token: this.state.token,
 			}
 			url = "/api/file/deleteFile"
 		}
 
-		fetch(server_url + url, {
+		fetch(url, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
@@ -531,17 +590,7 @@ class Home extends Component {
 	render() {
 		return (
 			<div>
-				{/* {this.state.url !== null && <img src={this.state.url} />}
-
-				{this.state.url !== null && 
-					<Document file={this.state.url} onLoadSuccess={({ numPages }) => this.setState({ 
-						numPages: numPages,
-						currPage: 1 })} onClick={() => this.setState({
-							currPage: this.state.currPage + 1
-						})}>
-						<Page pageNumber={this.state.currPage} />
-					</Document>} */}
-
+                {/* right click folder / file */}
 				<Menu
 					keepMounted
 					open={this.state.mouseY !== null}
@@ -585,7 +634,7 @@ class Home extends Component {
 									<DraftsIcon fontSize="small" />
 								</ListItemIcon>
 								<Typography variant="inherit" noWrap>
-									Get share link
+									Get shareable link
 								</Typography>
 							</MenuItem>
 							{/* <MenuItem onClick={}>Rename</MenuItem> */}
@@ -604,29 +653,54 @@ class Home extends Component {
 									Remove
 								</Typography>
 							</MenuItem>
+                            <MenuItem onClick={() => {
+								this.getShareLinkFolder()
+								this.closeMenu()
+							}}>
+								<ListItemIcon>
+									<DraftsIcon fontSize="small" />
+								</ListItemIcon>
+								<Typography variant="inherit" noWrap>
+									Get shareable link
+								</Typography>
+							</MenuItem>
+							{this.state.infos !== null && this.state.owner === this.state.infos.owner && 
+								<MenuItem onClick={() => {
+									this.openModal(true)
+									this.closeMenu()
+								}}>
+									<ListItemIcon>
+										<DraftsIcon fontSize="small" />
+									</ListItemIcon>
+									<Typography variant="inherit" noWrap>
+										Modify
+									</Typography>
+								</MenuItem>}
+							
 						</div>
 					}
 				</Menu>
 
-
+                {/* create file with name, password, visible */}
 				<Modal show={this.state.showModal} onHide={this.closeModal}
 					size="md"
 					aria-labelledby="contained-modal-title-vcenter"
 					centered>
 					<Modal.Header closeButton>
 						<Modal.Title id="contained-modal-title-vcenter">
-							New Folder
+							{this.state.modifyFolder === true ? "Modify Folder" : "New Folder"}
 					</Modal.Title>
 					</Modal.Header>
 					<Modal.Body>
 						<div style={{ paddingLeft: "30px", paddingRight: "30px" }}>
 							<div>
-								<InputAntd placeholder="Folder name" onChange={(e) => this.setState({
+								<InputAntd defaultValue={this.state.name} placeholder="Folder name" onChange={(e) => this.setState({
 									name: e.target.value
 								})} />
 							</div>
 							<div>
 								<FormControlLabel
+								 	checked={this.state.showPassword}
 									value="password"
 									control={
 										<Checkbox color="primary" onClick={() => this.setState({
@@ -636,7 +710,8 @@ class Home extends Component {
 									label="Password"
 								/>
 								{this.state.showPassword === true ?
-									<InputAntd placeholder="Password" type="password" onChange={(e) => this.setState({
+									<InputAntd  defaultValue={this.state.password} placeholder="Password" 
+										type="password" onChange={(e) => this.setState({
 										password: e.target.value
 									})} />
 									: null}
@@ -644,6 +719,7 @@ class Home extends Component {
 							<div>
 								<FormControlLabel
 									value="Visible to everyone"
+									checked={this.state.visible}
 									control={
 										<Checkbox color="primary" onClick={() => this.setState({
 											visible: !this.state.visible
@@ -657,16 +733,27 @@ class Home extends Component {
 					</Modal.Body>
 					<Modal.Footer>
 						<Button variant="contained" style={{ backgroundColor: "white" }} onClick={this.closeModal} >Cancel</Button>
+						{this.state.modifyFolder === true ? 
+						<Button variant="contained" style={{
+							backgroundColor: "#4caf50",
+							marginLeft: "20px",
+							marginRight: "20px"
+						}}
+							onClick={this.modifyFolder}>Save</Button>
+						:
 						<Button variant="contained" style={{
 							backgroundColor: "#4caf50",
 							marginLeft: "20px",
 							marginRight: "20px"
 						}}
 							onClick={this.createFolder}>Create</Button>
+						}
+						
 					</Modal.Footer>
 				</Modal>
-
-				<Modal show={this.state.showModalPasswod} onHide={this.closeModal}
+                
+                {/* ask for password */}
+				<Modal show={this.state.showModalPassword} onHide={this.closeModal}
 					size="md"
 					aria-labelledby="contained-modal-title-vcenter"
 					centered>
@@ -692,19 +779,20 @@ class Home extends Component {
 							onClick={this.accessFolder}>Access</Button>
 					</Modal.Footer>
 				</Modal>
-
+				
+				{/* show view or download on click file */}
 				<Modal show={this.state.showModalFile} onHide={this.closeModal}
 					size="md"
 					aria-labelledby="contained-modal-title-vcenter"
 					centered>
 					<Modal.Header closeButton>
 						<Modal.Title id="contained-modal-title-vcenter">
-							{`File ${this.state.name}`}
+							File {this.state.name.length > 20 ? (this.state.name.split("").splice(0, 20).join("") + "...") : this.state.name}
 						</Modal.Title>
 					</Modal.Header>
 					<Modal.Body>
 						<div style={{ paddingLeft: "30px", paddingRight: "30px", textAlign: "center" }}>
-							<Button variant="contained" style={{ backgroundColor: "#ef5350" }} onClick={this.viewFile}>View</Button>
+							<Button variant="contained" style={{ backgroundColor: "#fbc02d" }} onClick={this.viewFile}>View</Button>
 							<Button variant="contained" style={{
 								backgroundColor: "#4caf50", marginLeft: "20px", marginRight: "20px"
 							}}
@@ -726,68 +814,88 @@ class Home extends Component {
 					</div>
 
 					<div style={{ margin: "20px" }}>
-						<Upload {...{
-							name: 'file',
-							action: server_url + '/api/file/uploadFile',
-							beforeUpload(file, fileList) {
-								var files = fileList
-								let size = 16000000
-								for (var a = 0; a < files.length; a++) {
-									if (files[a].size > size) {
-										message.error(`${files[a].name} is too large, please pick a smaller file\n`);
-										return false
+						<Row style={{justifyContent: "center"}}>
+							<div>
+								<div style={{ margin: "10px" }} onClick={() => {
+									if(this.getParent() === "/"){
+										message.error("Select or create a folder before uploading files");
 									}
-								}
-								return true
-							},
-							data: {
-								owner: this.state.owner,
-								token: this.state.token,
-								path: this.state.path,
-								// password: this.state.password,
-								// visibleToEveryone: this.state.visible,
-							},
-							showUploadList: false,
-							onChange: this.showInfoFile
-						}}>
-							<Button
-								variant="contained"
-								className="buttons-folders"
-								style={{
-									textAlign: "left",
-									justifyContent: "left",
-									backgroundColor: "#2196f3",
-									borderRadius: "7px",
-									width: "auto"
-								}}
-								startIcon={<UploadOutlined />}>
-								Upload File
-							</Button>
-						</Upload>
+								}}>
+									<Upload {...{
+										disabled: this.getParent() === "/" ? true : false,
+										name: 'file',
+										action: '/api/file/uploadFile',
+										beforeUpload(file, fileList) {
+											var files = fileList
+											let size = 16000000
+											for (var a = 0; a < files.length; a++) {
+												if (files[a].size > size) {
+													message.error(`${files[a].name} is too large, please pick a smaller file\n`);
+													return false
+												}
+											}
+											return true
+										},
+										data: {
+											owner: this.state.owner,
+											token: this.state.token,
+											parent: this.getParent(),
+											password: "", // TODO
+											visibleToEveryone: true, // TODO
+										},
+										showUploadList: false,
+										onChange: this.showMessageUploadFile
+									}}>
+									
+										<Button
+											variant="contained"
+											className="buttons-folders"
+											style={{
+												textAlign: "left",
+												justifyContent: "left",
+												backgroundColor: "#2196f3",
+												borderRadius: "7px",
+												width: "auto"
+											}}
+											startIcon={<UploadOutlined />}>
+											Upload File
+										</Button>
+									</Upload>
+								</div>
+							</div>
 
-						<Button
-							variant="contained"
-							className="buttons-folders"
-							style={{
-								textAlign: "left",
-								justifyContent: "left",
-								backgroundColor: "#ff9800",
-								borderRadius: "7px",
-								marginLeft: "20px",
-								width: "auto"
-							}}
-							startIcon={<FolderAddOutlined />}
-							onClick={this.openModal}>
-							Create Folder
-						</Button>
+							<div>
+								<Button
+									variant="contained"
+									className="buttons-folders"
+									style={{
+										margin: "10px",
+										textAlign: "left",
+										justifyContent: "left",
+										backgroundColor: "#ff9800",
+										borderRadius: "7px",
+										marginLeft: "20px",
+										width: "auto"
+									}}
+									startIcon={<FolderAddOutlined />}
+									onClick={this.openModal}>
+									Create Folder
+								</Button>
+							</div>
+						</Row>
 					</div>
 					
-					<Note text='Some text **with emphasis**.'></Note>
-
-					<Row style={{ maxHeight: "230px", overflow: "auto", overflowY: "scroll" }}>
-						{this.state.folders.map((item) => {
+					<Row style={{ maxHeight: "230px", overflow: "auto", overflowY: "scroll", justifyContent: "center" }}>
+						{this.state.folders.filter(item => {
+							if(this.state.search.length > 0){
+								let re = new RegExp(this.state.search.toLowerCase(), "i")
+								return re.test(item.name.toLowerCase())
+							} else {
+								return true
+							}
+						}).map((item) => {
 							return (
-								<Col className="folders" key={item._id}>
+								<div className="folders" key={item._id}>
 									<Button
 										variant="contained"
 										className="buttons-folders"
@@ -803,29 +911,41 @@ class Home extends Component {
 											this.setState({
 												mouseX: e.clientX - 2,
 												mouseY: e.clientY - 4,
-												id: item.idFolder,
 												isFile: false,
-												name: item.name,
 												infos: item,
 											})
 										}}
-										onClick={() => this.clickFolder(item)}
+										onClick={() => {
+											this.setState({
+												isFile: false,
+												infos: item,
+											}, () => {
+												this.clickFolder()
+											})
+										}}
 									>
 										<Typography variant="inherit" noWrap>
 											{item.name}
 										</Typography>
 									</Button>
-								</Col>
+								</div>
 							)
 						})}
 					</Row>
 
 					<Divider />
 
-					<Row style={{ overflow: "auto", overflowY: "scroll" }}>
-						{this.state.files.map((item) => {
+					<Row style={{ overflow: "auto", overflowY: "scroll", justifyContent: "center" }}>
+						{this.state.files.filter(item => {
+							if(this.state.search.length > 0){
+								let re = new RegExp(this.state.search.toLowerCase(), "i")
+								return re.test(item.name.toLowerCase())
+							} else {
+								return true
+							}
+						}).map((item) => {
 							return (
-								<Col className="files" key={item._id}>
+								<div className="files" key={item._id}>
 									<Button
 										props={item}
 										variant="contained"
@@ -841,18 +961,24 @@ class Home extends Component {
 											this.setState({
 												mouseX: e.clientX - 2,
 												mouseY: e.clientY - 4,
-												id: item.idFile,
 												isFile: true,
 												infos: item,
-											}, () => this.clickFile(item, false))
+											}, () => this.clickFile(false))
 										}}
-										onClick={() => this.clickFile(item)}
+										onClick={() => {
+											this.setState({
+												isFile: true,
+												infos: item,
+											}, () => {
+												this.clickFile()
+											})
+										}}
 									>
 										<Typography variant="inherit" noWrap>
 											{item.name}
 										</Typography>
 									</Button>
-								</Col>
+								</div>
 							)
 						})}
 					</Row>

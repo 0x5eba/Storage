@@ -1,5 +1,5 @@
 const FileController = require('./file.controller')
-const AuthController = require("../common/middlewares/auth.validation.middleware")
+const AuthController = require("../authorization/auth.js")
 const FolderController = require('../folder/folder.controller')
 const path = require("path")
 const crypto = require('crypto')

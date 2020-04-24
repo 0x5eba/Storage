@@ -19,7 +19,7 @@ const Folder = mongoose.model('Folder', FolderModel, 'Folder')
 
 exports.addFolderToParent = (parent, idFolder) => {
 	return new Promise((resolve, reject) => {
-		Folder.findOneAndUpdate({ idFolder: parent }, { $push: { children: idFolder } }, function (err, folder) {
+		Folder.findOneAndUpdate({ idFolder: parent }, { $push: { children: idFolder } }, { new: true }, function (err, folder) {
 			if (err) return reject(err)
 			resolve(folder)
 		})
@@ -101,6 +101,17 @@ exports.deleteFolders = async (folders) => {
 exports.isOwner = (owner, idFolder) => {
 	return new Promise((resolve, reject) => {
 		Folder.findOne({ owner: owner, idFolder: idFolder }, {}, function (err, folder) {
+			if (err) return reject(err)
+			resolve(folder)
+		})
+	})
+}
+
+exports.modify = (owner, idFolder, password, name, visibleToEveryone) => {
+	return new Promise((resolve, reject) => {
+		Folder.findOneAndUpdate({ owner: owner, idFolder: idFolder }, 
+			{ $set: { password: password, name: name, visibleToEveryone: visibleToEveryone } }, 
+			{new: true}, function (err, folder) {
 			if (err) return reject(err)
 			resolve(folder)
 		})

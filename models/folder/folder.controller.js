@@ -88,6 +88,7 @@ exports.checkPrivileges = (req, res, next) => {
 
 exports.checkIfFolderExistForFile = (req, res, next) => {
     if(req.body.parent === "/"){
+        req.body.deleteFile = true
         return next()
     }
 
@@ -187,6 +188,7 @@ exports.checkIfPasswordRequired = (req, res, next) => {
             } else if(result.password.length !== 0){
 
                 var passwords = req.body.passwords
+                console.log(passwords)
                 for(let a = 0; a < passwords.length; ++a){
                     if(bcrypt.compareSync(passwords[a], result.password)){
                         return next()
@@ -201,5 +203,39 @@ exports.checkIfPasswordRequired = (req, res, next) => {
         .catch(err => {
             print(err)
             res.status(403).send({ err: "Error deleting folder" })
+        })
+}
+
+exports.checkIfPasswordChanged = (req, res, next) => {
+    FolderController.getFolder(req.body.idFolder)
+        .then((result) => {
+            if(req.body.password === result.password){ // 2 hash uguali
+                return next()
+            } else {
+                crypto.randomBytes(16, (err, buf) => {
+                    if (err) return res.status(403).send({ err: "Error changing password folder" })
+
+                    let salt = bcrypt.genSaltSync(10)
+                    let hash = bcrypt.hashSync(req.body.password, salt)
+                    req.body.password = hash
+
+                    return next()
+                })
+            }
+        })
+        .catch(err => {
+            print(err)
+            res.status(403).send({ err: "Error changing password folder" })
+        })
+}
+
+exports.modify = (req, res, next) => {
+    FolderController.modify(req.body.owner, req.body.idFolder, req.body.password, req.body.name, req.body.visibleToEveryone)
+        .then((result) => {
+            res.status(201).send({});
+        })
+        .catch(err => {
+            print(err)
+            res.status(403).send({ err: "Error modifying folder" })
         })
 }

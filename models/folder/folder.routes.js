@@ -1,5 +1,5 @@
 const FolderController = require('./folder.controller')
-const AuthController = require("../common/middlewares/auth.validation.middleware")
+const AuthController = require("../authorization/auth.js")
 const FileController = require('../file/file.controller')
 
 exports.routesConfig = function (app) {
@@ -27,5 +27,12 @@ exports.routesConfig = function (app) {
         FolderController.getFolder,
         FolderController.checkPrivileges,
         FolderController.getFolders
+    ]);
+
+    app.patch('/api/folder/modifyFolder', [
+        AuthController.proofToken,
+        FolderController.isOwner,
+        FolderController.checkIfPasswordChanged,
+        FolderController.modify,
     ]);
 }
