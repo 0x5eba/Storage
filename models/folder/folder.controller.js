@@ -87,27 +87,26 @@ exports.checkPrivileges = (req, res, next) => {
 }
 
 exports.checkIfFolderExistForFile = (req, res, next) => {
-    // var idFolder = req.body.path.split("/")
-    
-    // if(idFolder[3].length === 0){
-    //     return next()
-    // }
+    if(req.body.parent === "/"){
+        return next()
+    }
 
-    // idFolder = idFolder[idFolder.length-1]
-
-    // FolderController.getFolder(idFolder)
-    //     .then((result) => {
-    //         if(result !== null){
-    //             return next()
-    //         } else {
-    //             req.body.deleteFile = true
-    //             return next()
-    //         }
-    //     })
-    //     .catch(err => {
-    //         req.body.deleteFile = true
-    //         return next()
-    //     })
+    FolderController.getFolder(req.body.parent)
+        .then((result) => {
+            if(result !== null){
+                req.body.parent = result.idFolder
+                return next()
+            } else {
+                print("Error this folder doesn't exist")
+                req.body.deleteFile = true
+                return next()
+            }
+        })
+        .catch(err => {
+            print(err)
+            req.body.deleteFile = true
+            return next()
+        })
 }
 
 exports.checkIfFolderExist = (req, res, next) => {

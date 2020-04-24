@@ -6,6 +6,15 @@ exports.uploadFile = (req, res) => {
 
 	req.body.linkView = crypto.createHash('sha256').update(req.body.idFile).digest('hex');
 
+    req.body = {
+        linkView: req.body.linkView,
+        idFile: req.body.idFile,
+        name: req.body.idFile,
+        owner: req.body.owner,
+        parent: req.body.parent,
+        visibleToEveryone: req.body.visibleToEveryone,
+    }
+
     FileController.uploadFile(req.body)
         .then((result) => {
             res.status(201).send(result);
@@ -62,7 +71,7 @@ exports.checkPrivileges = (req, res, next) => {
 }
 
 exports.getFiles = (req, res, next) => {
-    FileController.getFiles(req.body.owner, req.body.path)
+    FileController.getFiles(req.body.owner, req.body.parent)
         .then((result) => {
             res.status(201).send(result);
         })

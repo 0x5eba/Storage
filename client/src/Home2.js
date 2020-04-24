@@ -26,16 +26,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 import Note from './Note'
 
-// import { ToastContainer, toast } from 'react-toastify';
-// import 'react-toastify/dist/ReactToastify.css';
-
-// import { Document, Page, pdfjs, Text } from 'react-pdf';
-// // pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
-
-
 import "./Home.css"
-
-const server_url = process.env.NODE_ENV === 'production' ? 'https://store.sebastienbiollo.com' : 'http://localhost:5001'
 
 class Home extends Component {
 	constructor(props) {
@@ -107,6 +98,21 @@ class Home extends Component {
 	}
 
 	getFoldersAndFiles = () => {
+		if (this.state.path.includes("/file/")) {
+			// query per prendere solo quel file, e metterlo in this.state.files
+
+			var viewLink = this.state.path.split('/file/')
+			viewLink = viewLink[viewLink.length - 1]
+
+			this.setState({
+				viewLink: viewLink,
+			}, () => {
+				this.getSharedFile()
+			})
+
+			return
+		}
+
 		var data = {
 			parent: this.getParent(),
 			owner: this.state.owner,
@@ -114,7 +120,7 @@ class Home extends Component {
             passwords: this.state.passwords,
         }
 
-		fetch(server_url + "/api/folder/getFolders", {
+		fetch("/api/folder/getFolders", {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -133,6 +139,28 @@ class Home extends Component {
                     }
 				} else {
 					console.error('Error:', data.err)
+				}
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+
+
+		fetch("/api/file/getFiles", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				if (data.err === undefined) {
+					this.setState({
+						files: data
+					})
+				} else {
+					message.error(data.err)
 				}
 			})
 			.catch((error) => {
@@ -183,7 +211,7 @@ class Home extends Component {
 			password: this.state.password,
 			visibleToEveryone: this.state.visible,
 		}
-		fetch(server_url + "/api/folder/createFolder", {
+		fetch("/api/folder/createFolder", {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -216,7 +244,7 @@ class Home extends Component {
             parent: this.getParent(),
 			password: this.state.password,
 		}
-		fetch(server_url + "/api/folder/getFolderWithPassword", {
+		fetch("/api/folder/getFolderWithPassword", {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -251,7 +279,6 @@ class Home extends Component {
         path = path.join("/") + "/"
 
         var text = path + this.state.infos.idFolder
-        console.log(text, path)
 
         if (!navigator.clipboard) {
 			var textArea = document.createElement("textarea")
@@ -275,7 +302,163 @@ class Home extends Component {
 		}, function (err) {
 			message.error("Failed to copy")
         })
-    }
+	}
+	
+	searchFilesAndFolders = (e) => {
+		this.setState({
+			search: e.target.value
+		}, () => {
+
+			
+		})
+	}
+
+	getSharedFile = () => {
+		var data = {
+			link: this.state.viewLink,
+			owner: this.state.owner,
+			token: this.state.token,
+		}
+
+		fetch("/api/file/getSharedFile", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				if (data.err === undefined) {
+					this.setState({
+						files: [data]
+					})
+				} else {
+					console.error('Error:', data.err)
+				}
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+	}
+
+	getShareLinkFile = () => {
+		var path = this.state.path.split("/")
+        path.pop()
+        path = path.join("/") + "/"
+
+        var text = path + "file/" + this.state.infos.linkView
+
+		if (!navigator.clipboard) {
+			var textArea = document.createElement("textarea")
+			textArea.value = text
+			document.body.appendChild(textArea)
+			textArea.focus()
+			textArea.select()
+			try {
+				var successful = document.execCommand('copy');
+				var msg = successful ? 'successful' : 'unsuccessful';
+				console.log(msg)
+				message.success("Link copied to clipboard!")
+			} catch (err) {
+				message.error("Failed to copy")
+			}
+			document.body.removeChild(textArea)
+			return
+		}
+		navigator.clipboard.writeText(text).then(function () {
+			message.success("Link copied to clipboard!")
+		}, function (err) {
+			message.error("Failed to copy")
+		})
+	}
+
+	downloadFile = () => {
+		if (this.state.downloading === false) {
+			var link = document.createElement('a')
+			link.href = this.state.url
+			link.setAttribute('download', this.state.name)
+			link.click()
+		} else {
+			this.setState({
+				downloadFileClicked: true,
+			})
+		}
+	}
+
+	showMessageUploadFile = (info) => {
+		if (info.file.status === 'done') {
+			message.success(`${info.file.name} file uploaded successfully`);
+			this.getFoldersAndFiles()
+		} else if (info.file.status === 'error') {
+			message.error(`${info.file.name} file upload failed.`);
+		}
+	}
+
+	clickFolder = () => {
+		window.location.href = "/" + this.state.infos.idFolder
+	}
+
+	clickFile = (showModel=true) => {
+		var data = {
+			idFile: this.state.infos.idFile,
+			owner: this.state.owner,
+			token: this.state.token,
+		}
+
+		this.setState({
+			name: this.state.infos.name,
+			showModalFile: showModel,
+			downloading: true,
+		})
+
+		fetch("/api/file/getFile", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.blob())
+			.then(data => {
+				this.setState({
+					url: URL.createObjectURL(data),
+				}, () => {
+					this.setState({
+						downloading: false,
+					}, () => {
+
+
+						if (this.state.viewFileClicked === true) {
+							this.setState({
+								viewFileClicked: false
+							})
+							this.viewFile()
+						} else if (this.state.downloadFileClicked === true) {
+							this.setState({
+								downloadFileClicked: false
+							})
+							this.downloadFile()
+						}
+
+
+					})
+				})
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+	}
+
+	viewFile = () => {
+		if (this.state.downloading === false) {
+			window.location.href = this.state.url
+		} else {
+			this.setState({
+				viewFileClicked: true,
+			})
+		}
+	}
 
 	openModal = () => {
 		this.setState({
@@ -301,10 +484,6 @@ class Home extends Component {
 		}, () => { })
 	}
 
-	clickFolder = (infos) => {
-		window.location.href = "/" + infos.idFolder
-	}
-
 	closeMenu = () => {
 		this.setState({
 			mouseX: null,
@@ -322,14 +501,14 @@ class Home extends Component {
 
 		if (this.state.isFile === true) {
 			data = {
-				idFile: this.infos.idFile,
+				idFile: this.state.infos.idFile,
 				owner: this.state.owner,
 				token: this.state.token,
 			}
 			url = "/api/file/deleteFile"
 		}
 
-		fetch(server_url + url, {
+		fetch(url, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
@@ -338,13 +517,12 @@ class Home extends Component {
 		})
 			.then(data => data.json())
 			.then(data => {
-                console.log(data)
-				// if (data.err === undefined) {
-				// 	message.success(`${this.state.isFile === true ? "File" : "Folder"} deleted`)
-				// 	this.getFoldersAndFiles()
-				// } else {
-				// 	message.error(data.err)
-				// }
+				if (data.err === undefined) {
+					message.success(`${this.state.isFile === true ? "File" : "Folder"} deleted`)
+					this.getFoldersAndFiles()
+				} else {
+					message.error(data.err)
+				}
 			})
 			.catch((error) => {
 				console.error('Error:', error)
@@ -517,9 +695,30 @@ class Home extends Component {
 							onClick={this.accessFolder}>Access</Button>
 					</Modal.Footer>
 				</Modal>
+				
+				{/* show view or download on click file */}
+				<Modal show={this.state.showModalFile} onHide={this.closeModal}
+					size="md"
+					aria-labelledby="contained-modal-title-vcenter"
+					centered>
+					<Modal.Header closeButton>
+						<Modal.Title id="contained-modal-title-vcenter">
+							File {this.state.name.length > 20 ? (this.state.name.split("").splice(0, 20).join("") + "...") : this.state.name}
+						</Modal.Title>
+					</Modal.Header>
+					<Modal.Body>
+						<div style={{ paddingLeft: "30px", paddingRight: "30px", textAlign: "center" }}>
+							<Button variant="contained" style={{ backgroundColor: "#ef5350" }} onClick={this.viewFile}>View</Button>
+							<Button variant="contained" style={{
+								backgroundColor: "#4caf50", marginLeft: "20px", marginRight: "20px"
+							}}
+								onClick={this.downloadFile}>Download</Button>
+						</div>
+					</Modal.Body>
+				</Modal>
 
 				<div className="container">
-					{/* <div>
+					<div>
 						<TextField label="Search" type="search" variant="outlined"
 							style={{
 								margin: "20px",
@@ -528,12 +727,12 @@ class Home extends Component {
 								width: "80%",
 								backgroundColor: "white",
 							}} onChange={this.searchFilesAndFolders} />
-					</div> */}
+					</div>
 
 					<div style={{ margin: "20px" }}>
-						{/* <Upload {...{
+						<Upload {...{
 							name: 'file',
-							action: server_url + '/api/file/uploadFile',
+							action: '/api/file/uploadFile',
 							beforeUpload(file, fileList) {
 								var files = fileList
 								let size = 16000000
@@ -548,9 +747,9 @@ class Home extends Component {
 							data: {
 								owner: this.state.owner,
 								token: this.state.token,
-								path: this.state.path,
-								// password: this.state.password,
-								// visibleToEveryone: this.state.visible,
+								parent: this.getParent(),
+								// password: this.state.password,  // TODO
+								visibleToEveryone: true, // TODO
 							},
 							showUploadList: false,
 							onChange: this.showMessageUploadFile
@@ -568,7 +767,7 @@ class Home extends Component {
 								startIcon={<UploadOutlined />}>
 								Upload File
 							</Button>
-						</Upload> */}
+						</Upload>
 
 						<Button
 							variant="contained"
@@ -610,7 +809,14 @@ class Home extends Component {
 												infos: item,
 											})
 										}}
-										onClick={() => this.clickFolder(item)}
+										onClick={() => {
+											this.setState({
+												isFile: false,
+												infos: item,
+											}, () => {
+												this.clickFolder()
+											})
+										}}
 									>
 										<Typography variant="inherit" noWrap>
 											{item.name}
@@ -623,7 +829,7 @@ class Home extends Component {
 
 					<Divider />
 
-					{/* <Row style={{ overflow: "auto", overflowY: "scroll" }}>
+					<Row style={{ overflow: "auto", overflowY: "scroll" }}>
 						{this.state.files.map((item) => {
 							return (
 								<Col className="files" key={item._id}>
@@ -644,9 +850,16 @@ class Home extends Component {
 												mouseY: e.clientY - 4,
 												isFile: true,
 												infos: item,
-											}, () => this.clickFile(item, false))
+											}, () => this.clickFile(false))
 										}}
-										onClick={() => this.clickFile(item)}
+										onClick={() => {
+											this.setState({
+												isFile: true,
+												infos: item,
+											}, () => {
+												this.clickFile()
+											})
+										}}
 									>
 										<Typography variant="inherit" noWrap>
 											{item.name}
@@ -655,7 +868,7 @@ class Home extends Component {
 								</Col>
 							)
 						})}
-					</Row> */}
+					</Row>
 				</div>
 			</div>
 		);

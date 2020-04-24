@@ -8,7 +8,6 @@ const fs = require('fs')
 const GridFsStorage = require('multer-gridfs-storage')
 var config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
 
-
 exports.routesConfig = function (app) {
 	app.post('/api/file/uploadFile', [
         upload.single('file'),
@@ -16,25 +15,6 @@ exports.routesConfig = function (app) {
         FolderController.checkIfFolderExistForFile,
         FileController.removeFileWihCheck,
         FileController.uploadFile
-    ]);
-
-    app.post('/api/file/getFile', [
-        AuthController.proofToken,
-        FileController.getFile,
-        FileController.checkPrivileges,
-        FileController.getFileFormGridfs,
-    ]);
-
-    app.post('/api/file/getSharedFile', [
-        AuthController.proofToken,
-        FileController.getFileSharedLink,
-    ]);
-
-    app.get('/api/file/getFile/:id', [
-        AuthController.proofToken,
-        FileController.getFileById,
-        FileController.checkPrivileges,
-        FileController.getFileFormGridfs,
     ]);
 
     app.post('/api/file/getFiles', [
@@ -47,6 +27,18 @@ exports.routesConfig = function (app) {
         FileController.isOwner,
         FileController.deleteFile,
         FileController.deleteFileGrid,
+    ]);
+
+    app.post('/api/file/getFile', [
+        AuthController.proofToken,
+        FileController.getFile,
+        FileController.checkPrivileges,
+        FileController.getFileFormGridfs,
+    ]);
+
+    app.post('/api/file/getSharedFile', [
+        AuthController.proofToken,
+        FileController.getFileSharedLink,
     ]);
 }
 

@@ -1,4 +1,5 @@
 const mongodb = require('mongodb');
+const fs = require("fs")
 const mongoose = require('mongoose')
 require('mongoose-double')(mongoose)
 mongoose.set('useCreateIndex', true)
@@ -7,7 +8,7 @@ const FileModel = new mongoose.Schema({
     idFile: { type: String, trim: true, default: "", require: true }, // filename
     owner: { type: String, trim: true, default: "", require: true }, // e' un token
     name: { type: String, trim: true, default: "", require: true }, // nome file con estenzione
-    path: { type: String, trim: true, default: "", require: true },
+    parent: { type: String, trim: true, default: "", require: true }, // idFolder in cui e' dentro
     password: { type: String, trim: true, default: "" }, // se password !== '' allora devi passargli password per vederlo o essere l'owner
     // linkModify: { type: String, trim: true, default: "" }, // _id + random_string
     linkView: { type: String, trim: true, default: "" }, // _id + random_string
@@ -17,8 +18,9 @@ const FileModel = new mongoose.Schema({
 
 const File = mongoose.model('File', FileModel, 'File')
 
+var config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
 const Grid = require('gridfs-stream');
-let mongoURI = 'mongodb://localhost:27017/meet';
+const mongoURI = 'mongodb://localhost:27017/' + config.name
 mongoose.createConnection(mongoURI);
 var conn = mongoose.connection;
 var gfs;
@@ -103,9 +105,9 @@ exports.deleteFileGrid = (req, res) => {
     });
 }
 
-exports.getFiles = (owner, path) => {
+exports.getFiles = (owner, parent) => {
     return new Promise((resolve, reject) => {
-        File.find({ path: path, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {}, function (err, file) {
+        File.find({ parent: parent, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {}, function (err, file) {
 			if (err) return reject(err)
 			resolve(file)
 		})
