@@ -34,6 +34,10 @@ body {
 
 .files {
   margin: 15px;
+  display: flex;
+  background-color: white;
+  justify-content: center;
+  align-items: top;
 }
 
 .icons {
@@ -47,10 +51,12 @@ body {
 }
 
 .buttons-files {
+  position: absolute;
   width: 250px;
   height: 250px;
   justify-content: bottom;
   text-align: bottom;
+  margin:auto;
 }
 
 ::-webkit-scrollbar {

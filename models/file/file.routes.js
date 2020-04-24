@@ -54,6 +54,7 @@ const storage = new GridFsStorage({
 
                 req.body.idFile = filename
                 req.body.name = file.originalname
+                req.body.type = file.mimetype
 
                 const fileInfo = {
                     filename: filename,

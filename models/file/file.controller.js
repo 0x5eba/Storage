@@ -13,6 +13,7 @@ exports.uploadFile = (req, res) => {
         owner: req.body.owner,
         parent: req.body.parent,
         visibleToEveryone: req.body.visibleToEveryone,
+        type: req.body.type,
     }
 
     FileController.uploadFile(req.body)

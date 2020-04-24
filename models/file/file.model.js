@@ -13,7 +13,7 @@ const FileModel = new mongoose.Schema({
     // linkModify: { type: String, trim: true, default: "" }, // _id + random_string
     linkView: { type: String, trim: true, default: "" }, // _id + random_string
     visibleToEveryone: { type: Boolean, default: true },
-    // type: { type: String, trim: true, default: "" }, // se e' un'immagine o un txt o pdf posso fare una preview, altrimenti solo download
+    type: { type: String, trim: true, default: "" }, // se e' un'immagine o un txt o pdf posso fare una preview, altrimenti solo download
 })
 
 const File = mongoose.model('File', FileModel, 'File')

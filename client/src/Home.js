@@ -587,6 +587,40 @@ class Home extends Component {
 			})
 	}
 
+	getMineType = (mime_type) => {
+		let icon_classes = {
+			// Media
+			'image': 'far fa-file-image',
+			'audio': 'far fa-file-audio',
+			'video': 'far fa-file-video',
+			// Documents
+			'application/pdf': 'far fa-file-pdf',
+			'application/msword': 'far fa-file-word',
+			'application/vnd.ms-word': 'far fa-file-word',
+			'application/vnd.oasis.opendocument.text': 'far fa-file-word',
+			'application/vnd.openxmlformats-officedocument.wordprocessingml': 'far fa-file-word',
+			'application/vnd.ms-excel': 'far fa-file-excel',
+			'application/vnd.openxmlformats-officedocument.spreadsheetml': 'far fa-file-excel',
+			'application/vnd.oasis.opendocument.spreadsheet': 'far fa-file-excel',
+			'application/vnd.ms-powerpoint': 'far fa-file-powerpoint',
+			'application/vnd.openxmlformats-officedocument.presentationml': 'far fa-file-powerpoint',
+			'application/vnd.oasis.opendocument.presentation': 'far fa-file-powerpoint',
+			'text/plain': 'far fa-file-text',
+			'text/html': 'far fa-file-code',
+			'application/json': 'far fa-file-code',
+			// Archives
+			'application/gzip': 'far fa-file-archive',
+			'application/zip': 'far fa-file-archive',
+		}
+
+		for(let k in icon_classes){
+			if(mime_type.indexOf(k) === 0){
+				return icon_classes[k]
+			}
+		}
+		return 'far fa-file'
+	}
+
 	render() {
 		return (
 			<div>
@@ -787,7 +821,7 @@ class Home extends Component {
 					centered>
 					<Modal.Header closeButton>
 						<Modal.Title id="contained-modal-title-vcenter">
-							File {this.state.name.length > 20 ? (this.state.name.split("").splice(0, 20).join("") + "...") : this.state.name}
+							File {this.state.name.length > 15 ? (this.state.name.split("").splice(0, 15).join("") + "...") : this.state.name}
 						</Modal.Title>
 					</Modal.Header>
 					<Modal.Body>
@@ -946,6 +980,7 @@ class Home extends Component {
 						}).map((item) => {
 							return (
 								<div className="files" key={item._id}>
+									<i className={this.getMineType(item.type)} style={{fontSize: "70px", marginTop: "20px", position: "absolute", zIndex: "20"}}></i>
 									<Button
 										props={item}
 										variant="contained"
@@ -955,7 +990,7 @@ class Home extends Component {
 											justifyContent: "left", fontSize: "17px", paddingLeft: "20px"
 										}}
 										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" style={{ marginRight: "10px" }} /> :
-											<DescriptionIcon className="icons" style={{ marginRight: "10px" }} />)}
+											<i className={this.getMineType(item.type)} style={{fontSize: "20px", marginRight: "10px"}}></i>)}
 										onContextMenu={(e) => {
 											e.preventDefault()
 											this.setState({
@@ -974,9 +1009,9 @@ class Home extends Component {
 											})
 										}}
 									>
-										<Typography variant="inherit" noWrap>
-											{item.name}
-										</Typography>
+									<Typography variant="inherit" noWrap >
+										{item.name}
+									</Typography>
 									</Button>
 								</div>
 							)
