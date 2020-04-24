@@ -41,21 +41,20 @@ class Home extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			id: "",
 			owner: "",
 			token: "",
 			path: window.location.href,
-			parent: "/",
 			name: "",
 			password: "",
 			visible: false,
 			showModal: false,
-			showModalPasswod: false,
+			showModalPassword: false,
 			showPassword: false,
 			folders: [],
 			files: [],
 			search: "",
-			viewLink: null,
+            viewLink: null,
+            passwords: [],
 
 			url: null,
 			downloading: false,
@@ -67,177 +66,20 @@ class Home extends Component {
 			infos: null,
 		}
 
-
 		this.getFoldersAndFiles = this.getFoldersAndFiles.bind(this)
-	}
-
-	searchFilesAndFolders = (e) => {
-		this.setState({
-			search: e.target.value
-		}, () => {
-
-			var data = {
-				owner: this.state.owner,
-				token: this.state.token,
-				search: this.state.search,
-			}
-
-			fetch(server_url + "/api/search", {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(data),
+    }
+    
+    UNSAFE_componentWillMount = () => {
+        if(window.sessionStorage.getItem("passwords") === null) {
+            window.sessionStorage.setItem("passwords", JSON.stringify([]))
+            this.setState({
+				passwords: [],
 			})
-				.then(data => data.json())
-				.then(data => {
-					if (data.err === undefined) {
-						this.setState({
-							folders: data.folders,
-							files: data.files,
-						})
-					} else {
-						message.error(data.err)
-					}
-				})
-				.catch((error) => {
-					console.error('Error:', error)
-				})
-		})
-	}
-
-	getSharedFile = () => {
-		var data = {
-			link: this.state.viewLink,
-			path: this.state.path,
-			owner: this.state.owner,
-			token: this.state.token,
-		}
-
-		fetch(server_url + "/api/file/getSharedFile", {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(data),
-		})
-			.then(data => data.json())
-			.then(data => {
-				if (data.err === undefined) {
-					this.setState({
-						files: [data]
-					})
-				} else {
-					console.error('Error:', data.err)
-				}
+        } else {
+            this.setState({
+				passwords: window.sessionStorage.getItem("passwords"),
 			})
-			.catch((error) => {
-				console.error('Error:', error)
-			})
-	}
-
-	getFoldersAndFiles = () => {
-
-		if (this.state.path.includes("folder")) {
-			// query per prendere prendere quel folder e i file in quel folder, 
-			// potendo visualizzare tutto, e quelli con la password devono sempre richiederla
-
-			var viewLink = this.state.path.split('/folder/')
-			viewLink = viewLink[viewLink.length - 1]
-
-			this.setState({
-				viewLink: viewLink,
-				path: "/" + viewLink
-			}, () => {
-				this.getFoldersAndFiles()
-			})
-
-			return
-		}
-
-		if (this.state.path.includes("file")) {
-			// query per prendere solo quel file, e metterlo in this.state.files
-
-			var viewLink = this.state.path.split('/file/')
-			viewLink = viewLink[viewLink.length - 1]
-
-			this.setState({
-				viewLink: viewLink,
-			}, () => {
-				this.getSharedFile()
-			})
-
-			return
-		}
-
-		var data = {
-			path: this.state.path,
-			owner: this.state.owner,
-			token: this.state.token,
-		}
-
-		fetch(server_url + "/api/folder/getFolders", {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(data),
-		})
-			.then(data => data.json())
-			.then(data => {
-				if (data.err === undefined) {
-					this.setState({
-						folders: data
-					})
-				} else {
-					console.error('Error:', data.err)
-				}
-			})
-			.catch((error) => {
-				console.error('Error:', error)
-			})
-
-		fetch(server_url + "/api/file/getFiles", {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(data),
-		})
-			.then(data => data.json())
-			.then(data => {
-				if (data.err === undefined) {
-					this.setState({
-						files: data
-					})
-				} else {
-					message.error(data.err)
-				}
-			})
-			.catch((error) => {
-				console.error('Error:', error)
-			})
-	}
-
-	sha256 = async (message) => {
-		const msgBuffer = new TextEncoder('utf-8').encode(message)
-		const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
-		const hashArray = Array.from(new Uint8Array(hashBuffer))
-		const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('')
-		return hashHex
-	}
-
-	generate_token = (length) => {
-		var a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("")
-		var b = []
-		for (var i = 0; i < length; i++) {
-			var j = (Math.random() * (a.length - 1)).toFixed(0)
-			b[i] = a[j]
-		}
-		return b.join("")
-	}
-
-	UNSAFE_componentWillMount = () => {
+        }
 		if (window.localStorage.getItem("owner") !== null && window.localStorage.getItem("token") !== null) {
 			this.setState({
 				owner: window.localStorage.getItem("owner"),
@@ -264,15 +106,79 @@ class Home extends Component {
 		}
 	}
 
+	getFoldersAndFiles = () => {
+		var data = {
+			parent: this.getParent(),
+			owner: this.state.owner,
+            token: this.state.token,
+            passwords: this.state.passwords,
+        }
+
+		fetch(server_url + "/api/folder/getFolders", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				if (data.err === undefined) {
+                    if(data.passwordRequired === true){
+                        this.openModalPassword()
+                    } else {
+                        this.setState({
+                            folders: data
+                        })
+                    }
+				} else {
+					console.error('Error:', data.err)
+				}
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+	}
+
+	sha256 = async (message) => {
+		const msgBuffer = new TextEncoder('utf-8').encode(message)
+		const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
+		const hashArray = Array.from(new Uint8Array(hashBuffer))
+		const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('')
+		return hashHex
+	}
+
+	generate_token = (length) => {
+		var a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("")
+		var b = []
+		for (var i = 0; i < length; i++) {
+			var j = (Math.random() * (a.length - 1)).toFixed(0)
+			b[i] = a[j]
+		}
+		return b.join("")
+    }
+    
+    getParent = () => {
+        var parent = this.state.path.split("/")
+        parent = parent[parent.length-1]
+
+        if(parent.length === 0){
+            parent = "/"
+        }
+
+        return parent
+    }
+
 	createFolder = () => {
 		if (this.state.name.length === 0) {
 			message.error(`Insert a name please\n`);
 			return
-		}
+        }
+        
 		var data = {
 			owner: this.state.owner,
 			token: this.state.token,
-			path: this.state.path,
+			parent: this.getParent(),
 			name: this.state.name,
 			password: this.state.password,
 			visibleToEveryone: this.state.visible,
@@ -287,9 +193,8 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-					console.log(data)
 					this.getFoldersAndFiles()
-					message.success(`${data.name} folder uploaded successfully`);
+					message.success(`${this.state.name} folder uploaded successfully`);
 				} else {
 					message.error(`Folder upload failed.`)
 				}
@@ -304,15 +209,14 @@ class Home extends Component {
 	}
 
 	accessFolder = () => {
-		var data = {
-			idFolder: this.state.id,
-			owner: this.state.owner,
-			token: this.state.token,
-			path: this.state.path,
-			name: this.state.name,
+        var data = {
+            owner: this.state.owner,
+            token: this.state.token,
+            idFolder: this.getParent(),
+            parent: this.getParent(),
 			password: this.state.password,
 		}
-		fetch(server_url + "/api/folder/getFolder", {
+		fetch(server_url + "/api/folder/getFolderWithPassword", {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -322,10 +226,15 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
+                    
+                    // salva la password in sessionStorage
+                    var newPasswords = [...this.state.passwords, this.state.password]
+                    window.sessionStorage.setItem("passwords", JSON.stringify(newPasswords))
+
 					this.setState({
-						showModalPasswod: false,
-					}, () => {
-						window.location.href = "/" + this.state.id
+                        showModalPassword: false,
+                        folders: data,
+                        passwords: newPasswords,
 					})
 				} else {
 					message.error(data.err)
@@ -334,126 +243,17 @@ class Home extends Component {
 			.catch((error) => {
 				console.error('Error:', error)
 			})
-	}
+    }
+    
+    getShareLinkFolder = () => {
+        var path = this.state.path.split("/")
+        path.pop()
+        path = path.join("/") + "/"
 
-	showInfoFile = (info) => {
-		if (info.file.status === 'done') {
-			message.success(`${info.file.name} file uploaded successfully`);
-			this.getFoldersAndFiles()
-		} else if (info.file.status === 'error') {
-			message.error(`${info.file.name} file upload failed.`);
-		}
-	}
+        var text = path + this.state.infos.idFolder
+        console.log(text, path)
 
-	openModal = () => {
-		this.setState({
-			showModal: true,
-			name: "",
-			password: "",
-			showPassword: false,
-		}, () => { })
-	}
-
-	openModalPassword = () => {
-		this.setState({
-			showModalPassword: true,
-			password: "",
-		}, () => { })
-	}
-
-	closeModal = () => {
-		this.setState({
-			showModal: false,
-			showModalPasswod: false,
-			showModalFile: false,
-		}, () => { })
-	}
-
-	clickFolder = (props, showModel = true) => {
-		if (props.password.length === 0) {
-			window.location.href = "/" + props.idFolder
-		} else {
-			// modal per la password
-			this.setState({
-				id: props.idFolder,
-				name: props.name,
-				showModalPasswod: showModel,
-			})
-		}
-	}
-
-	clickFile = (props, showModel = true) => {
-		var data = {
-			idFile: props.idFile,
-			owner: this.state.owner,
-			token: this.state.token,
-		}
-
-		this.setState({
-			name: props.name,
-			showModalFile: showModel,
-			downloading: true,
-		})
-
-		fetch(server_url + "/api/file/getFile", {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(data),
-		})
-			.then(data => data.blob())
-			.then(data => {
-				this.setState({
-					url: URL.createObjectURL(data),
-				}, () => {
-					this.setState({
-						downloading: false,
-					}, () => {
-
-
-						if (this.state.viewFileClicked === true) {
-							this.setState({
-								viewFileClicked: false
-							})
-							this.viewFile()
-						} else if (this.state.downloadFileClicked === true) {
-							this.setState({
-								downloadFileClicked: false
-							})
-							this.downloadFile()
-						}
-
-
-					})
-				})
-			})
-			.catch((error) => {
-				console.error('Error:', error)
-			})
-	}
-
-	viewFile = () => {
-		if (this.state.downloading === false) {
-			window.location.href = this.state.url
-		} else {
-			this.setState({
-				viewFileClicked: true,
-			})
-		}
-	}
-
-	closeMenu = () => {
-		this.setState({
-			mouseX: null,
-			mouseY: null,
-		})
-	}
-
-	getShareLinkFile = () => {
-		var text = server_url + "/file/" + this.state.infos.linkView
-
-		if (!navigator.clipboard) {
+        if (!navigator.clipboard) {
 			var textArea = document.createElement("textarea")
 			textArea.value = text
 			document.body.appendChild(textArea)
@@ -474,33 +274,55 @@ class Home extends Component {
 			message.success("Link copied to clipboard!")
 		}, function (err) {
 			message.error("Failed to copy")
-		})
+        })
+    }
+
+	openModal = () => {
+		this.setState({
+			showModal: true,
+			name: "",
+			password: "",
+			showPassword: false,
+		}, () => { })
 	}
 
-	downloadFile = () => {
-		if (this.state.downloading === false) {
-			var link = document.createElement('a')
-			link.href = this.state.url
-			link.setAttribute('download', this.state.name)
-			link.click()
-		} else {
-			this.setState({
-				downloadFileClicked: true,
-			})
-		}
+	openModalPassword = () => {
+		this.setState({
+			showModalPassword: true,
+			password: "",
+		}, () => { })
+	}
+
+	closeModal = () => {
+		this.setState({
+			showModal: false,
+			showModalPassword: false,
+			showModalFile: false,
+		}, () => { })
+	}
+
+	clickFolder = (infos) => {
+		window.location.href = "/" + infos.idFolder
+	}
+
+	closeMenu = () => {
+		this.setState({
+			mouseX: null,
+			mouseY: null,
+		})
 	}
 
 	remove = () => {
 		var data = {
-			idFolder: this.state.id,
+			idFolder: this.state.infos.idFolder,
 			owner: this.state.owner,
 			token: this.state.token,
 		}
-		var url = "/api/folder/deleteFolder"
+		var url = "/api/folder/deleteFolders"
 
 		if (this.state.isFile === true) {
 			data = {
-				idFile: this.state.id,
+				idFile: this.infos.idFile,
 				owner: this.state.owner,
 				token: this.state.token,
 			}
@@ -516,12 +338,13 @@ class Home extends Component {
 		})
 			.then(data => data.json())
 			.then(data => {
-				if (data.err === undefined) {
-					message.success(`${this.state.isFile === true ? "File" : "Folder"} deleted`)
-					this.getFoldersAndFiles()
-				} else {
-					message.error(data.err)
-				}
+                console.log(data)
+				// if (data.err === undefined) {
+				// 	message.success(`${this.state.isFile === true ? "File" : "Folder"} deleted`)
+				// 	this.getFoldersAndFiles()
+				// } else {
+				// 	message.error(data.err)
+				// }
 			})
 			.catch((error) => {
 				console.error('Error:', error)
@@ -531,17 +354,7 @@ class Home extends Component {
 	render() {
 		return (
 			<div>
-				{/* {this.state.url !== null && <img src={this.state.url} />}
-
-				{this.state.url !== null && 
-					<Document file={this.state.url} onLoadSuccess={({ numPages }) => this.setState({ 
-						numPages: numPages,
-						currPage: 1 })} onClick={() => this.setState({
-							currPage: this.state.currPage + 1
-						})}>
-						<Page pageNumber={this.state.currPage} />
-					</Document>} */}
-
+                {/* right click folder / file */}
 				<Menu
 					keepMounted
 					open={this.state.mouseY !== null}
@@ -604,11 +417,22 @@ class Home extends Component {
 									Remove
 								</Typography>
 							</MenuItem>
+                            <MenuItem onClick={() => {
+								this.getShareLinkFolder()
+								this.closeMenu()
+							}}>
+								<ListItemIcon>
+									<DraftsIcon fontSize="small" />
+								</ListItemIcon>
+								<Typography variant="inherit" noWrap>
+									Get share link
+								</Typography>
+							</MenuItem>
 						</div>
 					}
 				</Menu>
 
-
+                {/* create file with name, password, visible */}
 				<Modal show={this.state.showModal} onHide={this.closeModal}
 					size="md"
 					aria-labelledby="contained-modal-title-vcenter"
@@ -665,8 +489,9 @@ class Home extends Component {
 							onClick={this.createFolder}>Create</Button>
 					</Modal.Footer>
 				</Modal>
-
-				<Modal show={this.state.showModalPasswod} onHide={this.closeModal}
+                
+                {/* ask for password */}
+				<Modal show={this.state.showModalPassword} onHide={this.closeModal}
 					size="md"
 					aria-labelledby="contained-modal-title-vcenter"
 					centered>
@@ -693,28 +518,8 @@ class Home extends Component {
 					</Modal.Footer>
 				</Modal>
 
-				<Modal show={this.state.showModalFile} onHide={this.closeModal}
-					size="md"
-					aria-labelledby="contained-modal-title-vcenter"
-					centered>
-					<Modal.Header closeButton>
-						<Modal.Title id="contained-modal-title-vcenter">
-							{`File ${this.state.name}`}
-						</Modal.Title>
-					</Modal.Header>
-					<Modal.Body>
-						<div style={{ paddingLeft: "30px", paddingRight: "30px", textAlign: "center" }}>
-							<Button variant="contained" style={{ backgroundColor: "#ef5350" }} onClick={this.viewFile}>View</Button>
-							<Button variant="contained" style={{
-								backgroundColor: "#4caf50", marginLeft: "20px", marginRight: "20px"
-							}}
-								onClick={this.downloadFile}>Download</Button>
-						</div>
-					</Modal.Body>
-				</Modal>
-
 				<div className="container">
-					<div>
+					{/* <div>
 						<TextField label="Search" type="search" variant="outlined"
 							style={{
 								margin: "20px",
@@ -723,10 +528,10 @@ class Home extends Component {
 								width: "80%",
 								backgroundColor: "white",
 							}} onChange={this.searchFilesAndFolders} />
-					</div>
+					</div> */}
 
 					<div style={{ margin: "20px" }}>
-						<Upload {...{
+						{/* <Upload {...{
 							name: 'file',
 							action: server_url + '/api/file/uploadFile',
 							beforeUpload(file, fileList) {
@@ -748,7 +553,7 @@ class Home extends Component {
 								// visibleToEveryone: this.state.visible,
 							},
 							showUploadList: false,
-							onChange: this.showInfoFile
+							onChange: this.showMessageUploadFile
 						}}>
 							<Button
 								variant="contained"
@@ -763,7 +568,7 @@ class Home extends Component {
 								startIcon={<UploadOutlined />}>
 								Upload File
 							</Button>
-						</Upload>
+						</Upload> */}
 
 						<Button
 							variant="contained"
@@ -782,8 +587,6 @@ class Home extends Component {
 						</Button>
 					</div>
 					
-					<Note text='Some text **with emphasis**.'></Note>
-
 					<Row style={{ maxHeight: "230px", overflow: "auto", overflowY: "scroll" }}>
 						{this.state.folders.map((item) => {
 							return (
@@ -803,9 +606,7 @@ class Home extends Component {
 											this.setState({
 												mouseX: e.clientX - 2,
 												mouseY: e.clientY - 4,
-												id: item.idFolder,
 												isFile: false,
-												name: item.name,
 												infos: item,
 											})
 										}}
@@ -822,7 +623,7 @@ class Home extends Component {
 
 					<Divider />
 
-					<Row style={{ overflow: "auto", overflowY: "scroll" }}>
+					{/* <Row style={{ overflow: "auto", overflowY: "scroll" }}>
 						{this.state.files.map((item) => {
 							return (
 								<Col className="files" key={item._id}>
@@ -841,7 +642,6 @@ class Home extends Component {
 											this.setState({
 												mouseX: e.clientX - 2,
 												mouseY: e.clientY - 4,
-												id: item.idFile,
 												isFile: true,
 												infos: item,
 											}, () => this.clickFile(item, false))
@@ -855,7 +655,7 @@ class Home extends Component {
 								</Col>
 							)
 						})}
-					</Row>
+					</Row> */}
 				</div>
 			</div>
 		);

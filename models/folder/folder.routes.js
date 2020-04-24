@@ -2,42 +2,30 @@ const FolderController = require('./folder.controller')
 const AuthController = require("../common/middlewares/auth.validation.middleware")
 const FileController = require('../file/file.controller')
 
-
 exports.routesConfig = function (app) {
 	app.post('/api/folder/createFolder', [
         AuthController.proofToken,
         FolderController.checkIfFolderExist,
-        FolderController.createFolder
-    ]);
-
-    app.post('/api/folder/getFolder', [
-        AuthController.proofToken,
-        FolderController.getFolder,
-        FolderController.checkPrivileges,
-    ]);
-
-    app.get('/api/folder/getFolder/:id', [
-        AuthController.proofToken,
-        FolderController.getFolderById,
-        FolderController.checkPrivileges,
+        FolderController.createFolder,
+        FolderController.addFolderToParent,
     ]);
 
     app.post('/api/folder/getFolders', [
         AuthController.proofToken,
+        FolderController.checkIfPasswordRequired,
         FolderController.getFolders
     ]);
 
-    app.delete('/api/folder/deleteFolder', [
+    app.delete('/api/folder/deleteFolders', [
         AuthController.proofToken,
         FolderController.isOwner,
-        FolderController.deleteFolder
+        FolderController.deleteFolders
     ]);
 
-
-    
-    app.post('/api/search', [
+    app.post('/api/folder/getFolderWithPassword', [
         AuthController.proofToken,
-        FileController.searchFile,
-        FolderController.searchFolder,
+        FolderController.getFolder,
+        FolderController.checkPrivileges,
+        FolderController.getFolders
     ]);
 }
