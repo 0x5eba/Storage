@@ -148,6 +148,9 @@ exports.deleteFolders = async (req, res, next) => {
 		await FolderController.deleteFolders(folders)
             .then((result) => {
                 folders = result
+                if(folders.length === 0){
+                    return res.status(201).send({});
+                }
             })
             .catch(err => {
                 // print(err)
