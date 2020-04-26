@@ -9,7 +9,7 @@ exports.uploadFile = (req, res) => {
     req.body = {
         linkView: req.body.linkView,
         idFile: req.body.idFile,
-        name: req.body.idFile,
+        name: req.body.name,
         owner: req.body.owner,
         parent: req.body.parent,
         visibleToEveryone: req.body.visibleToEveryone,
