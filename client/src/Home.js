@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 import { Upload, message, Button as ButtonAntd, Input as InputAntd } from 'antd';
-import { UploadOutlined, FolderAddOutlined } from '@ant-design/icons';
+import { UploadOutlined, FolderAddOutlined, FileAddOutlined } from '@ant-design/icons';
 import 'antd/dist/antd.css';
 
 import { Button, TextField } from '@material-ui/core';
@@ -11,6 +11,7 @@ import FolderIcon from '@material-ui/icons/Folder';
 import LockIcon from '@material-ui/icons/Lock';
 import FolderSharedIcon from '@material-ui/icons/FolderShared';
 import { Divider } from '@material-ui/core';
+import { TextareaAutosize } from '@material-ui/core';
 import DescriptionIcon from '@material-ui/icons/Description';
 import SearchIcon from '@material-ui/icons/Search';
 
@@ -43,6 +44,7 @@ class Home extends Component {
 			showPassword: false,
 			folders: [],
 			files: [],
+			notes: [],
 			search: "",
             viewLink: null,
 			passwords: [],
@@ -59,6 +61,16 @@ class Home extends Component {
 
 			searchFolders: [],
 			searchFiles: [],
+
+			showModalNote: false,
+			edit: false,
+			createNote: false,
+			titleNote: "",
+			textNote: "",
+			idNote: "",
+
+
+			isMobile: window.matchMedia("only screen and (max-width: 760px)").matches,
 		}
 
 		this.getFoldersAndFiles = this.getFoldersAndFiles.bind(this)
@@ -98,6 +110,16 @@ class Home extends Component {
 				.catch((e) => {
 					console.log(e)
 				})
+		}
+
+		if(this.getParent() === "/"){
+			var msg = ""
+			if(this.state.isMobile === false){
+				msg = "Right click on file/folder for more actions"
+			} else {
+				msg = "Long press on file/folder for more actions"
+			}
+			message.info(msg, 5)
 		}
 	}
 
@@ -452,7 +474,7 @@ class Home extends Component {
 
 		this.setState({
 			name: this.state.infos.name,
-			showModalFile: showModel,
+			// showModalFile: showModel,
 			downloading: true,
 		})
 
@@ -467,26 +489,24 @@ class Home extends Component {
 			.then(data => {
 				this.setState({
 					url: URL.createObjectURL(data),
+					downloading: false
 				}, () => {
-					this.setState({
-						downloading: false,
-					}, () => {
+					if(showModel === true){
+						var win = window.open(this.state.url, '_blank');
+ 						win.focus();
+					}
 
-
-						if (this.state.viewFileClicked === true) {
-							this.setState({
-								viewFileClicked: false
-							})
-							this.viewFile()
-						} else if (this.state.downloadFileClicked === true) {
-							this.setState({
-								downloadFileClicked: false
-							})
-							this.downloadFile()
-						}
-
-
-					})
+					// if (this.state.viewFileClicked === true) {
+					// 	this.setState({
+					// 		viewFileClicked: false
+					// 	})
+					// 	this.viewFile()
+					// } else if (this.state.downloadFileClicked === true) {
+					// 	this.setState({
+					// 		downloadFileClicked: false
+					// 	})
+					// 	this.downloadFile()
+					// }
 				})
 			})
 			.catch((error) => {
@@ -539,6 +559,8 @@ class Home extends Component {
 			modifyFolder: false,
 			showModalPassword: false,
 			showModalFile: false,
+			showModalNote: false,
+			idNote: "",
 		}, () => { })
 	}
 
@@ -619,6 +641,120 @@ class Home extends Component {
 			}
 		}
 		return 'far fa-file'
+	}
+
+	editText = () => {
+		this.setState({
+			edit: true
+		})
+	}
+
+	saveNote = () => {
+		var data = {
+			idNote: this.state.idNote,
+			title: this.state.titleNote,
+			text: this.state.textNote,
+			owner: this.state.owner,
+			token: this.state.token,
+		}
+
+		fetch("/api/note/saveNote", {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				if (data.err === undefined) {
+					
+				} else {
+					console.error('Error:', data.err)
+				}
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+	}
+
+	createNote = () => {
+		var data = {
+			title: this.state.titleNote,
+			text: this.state.textNote,
+			owner: this.state.owner,
+			token: this.state.token,
+		}
+
+		fetch("/api/note/createNote", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				if (data.err === undefined) {
+					this.setState({
+						idNote: data.idNote
+					})
+				} else {
+					console.error('Error:', data.err)
+				}
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+	}
+
+	preventDuplicate = (e) => {
+		if(this.state.createNote === true){
+			this.setState({
+				[e.target.name]: e.target.value,
+				createNote: false,
+			}, () => {
+				this.createNote()
+			})
+		}
+	}
+
+	handleInputNote = (e) => {
+		if(this.state.createNote === true){
+			// create note
+			setTimeout(this.preventDuplicate(e), Math.random()*3000 + Math.random()*1000);
+		} else {
+			// simple update
+			this.setState({
+				[e.target.name]: e.target.value,
+			}, () => {
+				if(this.state.idNote !== ""){
+					this.saveNote()
+				}
+			})
+		}
+	}
+
+	previewText = () => {
+		this.setState({
+			edit: false
+		})
+	}
+
+	openModalCreateNote = () => {
+		this.setState({
+			showModalNote: true,
+			createNote: true,
+			edit: true,
+		})
+	}
+
+	openModalShowNote = () => {
+		this.setState({
+			showModalNote: true,
+			createNote: false,
+			edit: false,
+		})
 	}
 
 	render() {
@@ -714,6 +850,58 @@ class Home extends Component {
 						</div>
 					}
 				</Menu>
+
+				
+				<Modal show={this.state.showModalNote} onHide={this.closeModal}
+					size="lg"
+					aria-labelledby="contained-modal-title-vcenter"
+					centered>
+					<Modal.Header closeButton>
+						<Modal.Title id="contained-modal-title-vcenter" style={{ width: "100%" }}>
+							{this.state.edit === false ?
+							this.state.titleNote
+							:
+							<TextareaAutosize rowsMax={1} placeholder="Title" value={this.state.titleNote} name="titleNote" onChange={this.handleInputNote} autoFocus
+								style={{width: "100%", borderRadius: "6px", border: "none", 
+								borderColor: "Transparent", overflow: "auto", outline: "none", resize: "none", 
+								margin: "0px"}} />
+							}
+						</Modal.Title>
+					</Modal.Header>
+					<Modal.Body style={{overflowY: "auto", wordBreak: "break-all", width: "100%", maxHeight: "calc(100vh - 200px)", minHeight: "400px"}}>
+						<div>
+							{this.state.edit === false ?
+							<Note text={this.state.textNote} style={{width: "100%", minHeight: "100%", borderRadius: "6px", border: "none", 
+							borderColor: "Transparent", overflow: "auto", outline: "none", resize: "none", 
+							margin: "0px", fontSize: "14px"}}></Note>
+							:
+							<div>
+								<TextareaAutosize placeholder="Write a note in markdown..." value={this.state.textNote} name="textNote" onChange={this.handleInputNote}
+								style={{width: "100%", minHeight: "100%", borderRadius: "6px", border: "none", 
+								borderColor: "Transparent", overflow: "auto", outline: "none", resize: "none", 
+								margin: "0px", fontSize: "14px"}} />
+							</div>
+							}
+						</div>
+					</Modal.Body>
+					<Modal.Footer>
+						{this.state.edit === false ?
+						<Button variant="contained" style={{
+							backgroundColor: "#2196f3",
+							marginLeft: "20px",
+							marginRight: "20px"
+						}} onClick={this.editText}>Edit</Button>
+						:
+						<Button variant="contained" style={{
+							backgroundColor: "#4caf50",
+							marginLeft: "20px",
+							marginRight: "20px"
+						}} onClick={this.previewText}>Preview</Button>
+						}
+					</Modal.Footer>
+				</Modal>
+
+
 
                 {/* create file with name, password, visible */}
 				<Modal show={this.state.showModal} onHide={this.closeModal}
@@ -916,6 +1104,25 @@ class Home extends Component {
 									Create Folder
 								</Button>
 							</div>
+
+							<div>
+								<Button
+									variant="contained"
+									className="buttons-folders"
+									style={{
+										margin: "10px",
+										textAlign: "left",
+										justifyContent: "left",
+										backgroundColor: "#4caf50",
+										borderRadius: "7px",
+										marginLeft: "20px",
+										width: "auto"
+									}}
+									startIcon={<FileAddOutlined />}
+									onClick={this.openModalCreateNote}>
+									Create Note
+								</Button>
+							</div>
 						</Row>
 					</div>
 					
@@ -970,6 +1177,52 @@ class Home extends Component {
 					<Divider />
 
 					<Row style={{ overflow: "auto", overflowY: "scroll", justifyContent: "center" }}>
+
+						{this.state.notes.filter(item => {
+							if(this.state.search.length > 0){
+								let re = new RegExp(this.state.search.toLowerCase(), "i")
+								return re.test(item.title.toLowerCase()) || re.test(item.text.toLowerCase())
+							} else {
+								return true
+							}
+						}).map((item) => {
+							return (
+								<div className="notes" key={item._id}>
+									<Button
+										props={item}
+										variant="contained"
+										className="buttons-notes"
+										style={{
+											textTransform: 'none', backgroundColor: "white", textAlign: "left",
+											justifyContent: "left", fontSize: "17px", paddingLeft: "20px"
+										}}
+										onContextMenu={(e) => {
+											e.preventDefault()
+											this.setState({
+												mouseX: e.clientX - 2,
+												mouseY: e.clientY - 4,
+												idNote: item.idNote,
+												infos: item,
+											})
+										}}
+										onClick={() => {
+											this.setState({
+												idNote: item.idNote,
+												infos: item,
+											}, () => {
+												this.openModalShowNote()
+											})
+										}}
+									>
+									<Typography variant="inherit" noWrap >
+										
+									</Typography>
+									</Button>
+								</div>
+							)
+						})}
+
+
 						{this.state.files.filter(item => {
 							if(this.state.search.length > 0){
 								let re = new RegExp(this.state.search.toLowerCase(), "i")
@@ -980,7 +1233,7 @@ class Home extends Component {
 						}).map((item) => {
 							return (
 								<div className="files" key={item._id}>
-									<i className={this.getMineType(item.type)} style={{fontSize: "70px", marginTop: "20px", position: "absolute", zIndex: "20"}}></i>
+									{/* <i className={this.getMineType(item.type)} style={{fontSize: "70px", marginTop: "20px", position: "absolute", zIndex: "20"}}></i> */}
 									<Button
 										props={item}
 										variant="contained"
@@ -989,8 +1242,8 @@ class Home extends Component {
 											textTransform: 'none', backgroundColor: "white", textAlign: "left",
 											justifyContent: "left", fontSize: "17px", paddingLeft: "20px"
 										}}
-										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" style={{ marginRight: "10px" }} /> :
-											<i className={this.getMineType(item.type)} style={{fontSize: "20px", marginRight: "10px"}}></i>)}
+										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" style={{ fontSize: "50px", marginRight: "10px" }} /> :
+											<i className={this.getMineType(item.type)} style={{fontSize: "50px", marginRight: "10px"}}></i>)}
 										onContextMenu={(e) => {
 											e.preventDefault()
 											this.setState({

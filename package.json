@@ -36,6 +36,7 @@
     "react-contexify": "^4.1.1",
     "react-context-menu": "^3.0.2",
     "react-contextmenu": "^2.13.0",
+    "react-markdown": "^4.3.1",
     "react-pdf": "^4.1.0"
   }
 }
