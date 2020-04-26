@@ -4,90 +4,78 @@ const mongoose = require('mongoose')
 require('mongoose-double')(mongoose)
 mongoose.set('useCreateIndex', true)
 
-const FileModel = new mongoose.Schema({
-    idFile: { type: String, trim: true, default: "", require: true }, // filename
+const NoteModel = new mongoose.Schema({
+    idNote: { type: String, trim: true, default: "", require: true }, // notename
     owner: { type: String, trim: true, default: "", require: true }, // e' un token
-    name: { type: String, trim: true, default: "", require: true }, // nome file con estenzione
     parent: { type: String, trim: true, default: "", require: true }, // idFolder in cui e' dentro
+	title: { type: String, trim: true, default: "" }, 
+    text: { type: String, trim: true, default: "" }, 
     password: { type: String, trim: true, default: "" }, // se password !== '' allora devi passargli password per vederlo o essere l'owner
-    // linkModify: { type: String, trim: true, default: "" }, // _id + random_string
     linkView: { type: String, trim: true, default: "" }, // _id + random_string
     visibleToEveryone: { type: Boolean, default: true },
-    type: { type: String, trim: true, default: "" }, // se e' un'immagine o un txt o pdf posso fare una preview, altrimenti solo download
 })
 
-const File = mongoose.model('File', FileModel, 'File')
+const Note = mongoose.model('Note', NoteModel, 'Note')
 
-var config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
-const Grid = require('gridfs-stream');
-const mongoURI = 'mongodb://localhost:27017/' + config.name
-mongoose.createConnection(mongoURI);
-var conn = mongoose.connection;
-var gfs;
-conn.once('open', () => {
-    gfs = Grid(conn.db, mongoose.mongo);
-    gfs.collection('uploads');
-})
-
-exports.uploadFile = (fileData) => {
+exports.createNote = (noteData) => {
 	return new Promise((resolve, reject) => {
-		const file = new File(fileData)
-		file.save(function (err, newfile) {
+		const note = new Note(noteData)
+		note.save(function (err, newnote) {
 			if (err) return reject(err)
-			resolve(newfile) // mi servirebbe solo idFile ma ok
+			resolve(newnote) // mi servirebbe solo idNote ma ok
 		})
 	})
 }
 
-exports.getFileById = (id) => {
+exports.getNoteById = (id) => {
 	return new Promise((resolve, reject) => {
-		File.findById(id, {}, function (err, file) {
+		Note.findById(id, {}, function (err, note) {
 			if (err) return reject(err)
-			resolve(file)
+			resolve(note)
 		})
 	})
 }
 
-exports.getFile = (idFile) => {
+exports.getNote = (idNote) => {
 	return new Promise((resolve, reject) => {
-		File.findOne({idFile: idFile}, {}, function (err, file) {
+		Note.findOne({idNote: idNote}, {}, function (err, note) {
 			if (err) return reject(err)
-			resolve(file)
+			resolve(note)
 		})
 	})
 }
 
-exports.changeFile = (id, data) => {
+exports.changeNote = (id, data) => {
 	return new Promise((resolve, reject) => {
-		File.findByIdAndUpdate(id, data, function (err, file) {
+		Note.findByIdAndUpdate(id, data, function (err, note) {
 			if (err) return reject(err)
-			resolve(file)
+			resolve(note)
 		})
 	})
 }
 
-exports.removeFile = (idFile) => {
+exports.removeNote = (idNote) => {
     return new Promise((resolve, reject) => {
-        gfs.remove({ idFile: idFile, root: 'uploads' }, (err, gridStore) => {
+        gfs.remove({ idNote: idNote, root: 'uploads' }, (err, gridStore) => {
             if (err) return reject(err)
-            File.findOneAndRemove({ idFile: idFile }, function (err, file) {
+            Note.findOneAndRemove({ idNote: idNote }, function (err, note) {
                 if (err) return reject(err)
-                resolve(file)
+                resolve(note)
             })
         });
     })
 }
 
-exports.getFileFormGridfs = (req, res) => { 
-    gfs.files.findOne({ filename: req.body.idFile }, (err, file) => { // "metadata.name": req.body.name
-        if (!file || file.length === 0) {
-            return res.status(404).send({ err: "File doesn't exist" });
+exports.getNoteFormGridfs = (req, res) => { 
+    gfs.notes.findOne({ notename: req.body.idNote }, (err, note) => { // "metadata.name": req.body.name
+        if (!note || note.length === 0) {
+            return res.status(404).send({ err: "Note doesn't exist" });
         }
 
-        const readstream = gfs.createReadStream(file.filename)
-        res.header({ 'Content-type': file.contentType })
+        const readstream = gfs.createReadStream(note.notename)
+        res.header({ 'Content-type': note.contentType })
         readstream.on('error', (err) => {
-            res.status(404).send({ err: "Error getting the file" })
+            res.status(404).send({ err: "Error getting the note" })
         })
         readstream.pipe(res)
         readstream.on('end', function () {
@@ -96,57 +84,68 @@ exports.getFileFormGridfs = (req, res) => {
     });
 }
 
-exports.deleteFileGrid = (req, res) => { 
-    gfs.files.remove({ filename: req.body.idFile }, (err, file) => {
-        if (!file || file.length === 0) {
-            return res.status(404).send({ err: "File doesn't exist" })
+exports.deleteNoteGrid = (req, res) => { 
+    gfs.notes.remove({ notename: req.body.idNote }, (err, note) => {
+        if (!note || note.length === 0) {
+            return res.status(404).send({ err: "Note doesn't exist" })
         }
         res.status(201).send({})
     });
 }
 
-exports.getFiles = (owner, parent) => {
+exports.getNotes = (owner, parent) => {
     return new Promise((resolve, reject) => {
-        File.find({ parent: parent, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {}, function (err, file) {
+        Note.find({ parent: parent, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {}, function (err, note) {
 			if (err) return reject(err)
-			resolve(file)
+			resolve(note)
 		})
     })
 }
 
-exports.searchFiles = (owner, search) => {
+exports.searchNotes = (owner, search) => {
 	return new Promise((resolve, reject) => {
-		File.find({ name: { "$regex": new RegExp("^" + search.toLowerCase(), "i") }, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {})
-			.limit(50).exec(function (err, folder) {
+		Note.find({ name: { "$regex": new RegExp("^" + search.toLowerCase(), "i") }, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {})
+			.limit(50).exec(function (err, note) {
 			if (err) return reject(err)
-			resolve(folder)
+			resolve(note)
 		})
 	})
 }
 
-exports.deleteFile = (owner, idFile) => {
+exports.deleteNote = (owner, idNote) => {
 	return new Promise((resolve, reject) => {
-		File.findOneAndDelete({ owner: owner, idFile: idFile }, {}, function (err, folder) {
+		Note.findOneAndDelete({ owner: owner, idNote: idNote }, {}, function (err, note) {
 			if (err) return reject(err)
-			resolve(folder)
+			resolve(note)
 		})
 	})
 }
 
-exports.isOwner = (owner, idFile) => {
+exports.isOwner = (owner, idNote) => {
 	return new Promise((resolve, reject) => {
-		File.findOne({ owner: owner, idFile: idFile }, {}, function (err, folder) {
+		Note.findOne({ owner: owner, idNote: idNote }, {}, function (err, note) {
 			if (err) return reject(err)
-			resolve(folder)
+			resolve(note)
 		})
 	})
 }
 
-exports.getSharedFile = (link) => {
+exports.getSharedNote = (link) => {
 	return new Promise((resolve, reject) => {
-		File.findOne({ linkView: link }, {}, function (err, folder) {
+		Note.findOne({ linkView: link }, {}, function (err, note) {
 			if (err) return reject(err)
-			resolve(folder)
+			resolve(note)
+		})
+	})
+}
+
+exports.saveNote = (owner, idNote, title, text) => {
+	return new Promise((resolve, reject) => {
+		Note.findOneAndUpdate({ owner: owner, idNote: idNote }, 
+			{ $set: { title: title, text: text } }, 
+			{new: true}, function (err, note) {
+			if (err) return reject(err)
+			resolve(note)
 		})
 	})
 }

@@ -14,6 +14,7 @@ import { Divider } from '@material-ui/core';
 import { TextareaAutosize } from '@material-ui/core';
 import DescriptionIcon from '@material-ui/icons/Description';
 import SearchIcon from '@material-ui/icons/Search';
+import InputAdornment from '@material-ui/core/InputAdornment';
 
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -560,7 +561,6 @@ class Home extends Component {
 			showModalPassword: false,
 			showModalFile: false,
 			showModalNote: false,
-			idNote: "",
 		}, () => { })
 	}
 
@@ -746,6 +746,7 @@ class Home extends Component {
 			showModalNote: true,
 			createNote: true,
 			edit: true,
+			idNote: "",
 		})
 	}
 
@@ -1026,6 +1027,13 @@ class Home extends Component {
 				<div className="container">
 					<div>
 						<TextField label="Search" type="search" variant="outlined"
+							InputProps={{
+								endAdornment: (
+								<InputAdornment position="end">
+									<SearchIcon />
+								</InputAdornment>
+								),
+							}}
 							style={{
 								margin: "20px",
 								marginBottom: "0px",

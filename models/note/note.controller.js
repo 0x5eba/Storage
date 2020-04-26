@@ -1,158 +1,180 @@
-const FileController = require('./note.model')
+const NoteController = require('./note.model')
 const crypto = require("crypto")
 const escapeRegExp = require('lodash.escaperegexp')
 
-exports.uploadFile = (req, res) => {
+exports.createNote = (req, res) => {
+    crypto.randomBytes(16, (err, buf) => {
+        if (err) return res.status(403).send({ err: "Error creating note" })
 
-	req.body.linkView = crypto.createHash('sha256').update(req.body.idFile).digest('hex');
+        if(req.body.password.length !== 0){
+            let salt = bcrypt.genSaltSync(10)
+            let hash = bcrypt.hashSync(req.body.password, salt)
+            req.body.password = hash
+        } else {
+            req.body.password = ""
+        }
 
-    req.body = {
-        linkView: req.body.linkView,
-        idFile: req.body.idFile,
-        name: req.body.name,
-        owner: req.body.owner,
-        parent: req.body.parent,
-        visibleToEveryone: req.body.visibleToEveryone,
-        type: req.body.type,
-    }
+        var idNote = buf.toString('hex') + Date.now()
 
-    FileController.uploadFile(req.body)
-        .then((result) => {
-            res.status(201).send(result);
-        })
-        .catch(err => {
-            res.status(403).send({ err: "Error uploading file" })
-        })
+        req.body = {
+            idNote: idNote,
+            title: req.body.name,
+            text: req.body.text,
+            owner: req.body.owner,
+            parent: req.body.parent,
+            linkView: crypto.createHash('sha256').update(idNote).digest('hex'),
+        }
+
+        NoteController.createNote(req.body)
+            .then((result) => {
+                res.status(201).send(result)
+            })
+            .catch(err => {
+                // print(err)
+                res.status(403).send({ err: "Error creating note" })
+            })
+    })
 }
 
-exports.getFileFormGridfs = (req, res) => {
-    FileController.getFileFormGridfs(req, res)
+exports.getNoteFormGridfs = (req, res) => {
+    NoteController.getNoteFormGridfs(req, res)
 }
 
-exports.getFile = (req, res, next) => {
-    FileController.getFile(req.body.idFile)
+exports.getNote = (req, res, next) => {
+    NoteController.getNote(req.body.idNote)
         .then((result) => {
             if(result !== null){
                 req.body.result = result
                 return next()
             } else {
-                res.status(403).send({ err: "Error this file doesn't exist" })
+                res.status(403).send({ err: "Error this note doesn't exist" })
             }
         })
         .catch(err => {
-            res.status(403).send({ err: "Error getting file" })
+            res.status(403).send({ err: "Error getting note" })
         })
 }
 
-exports.getFileById = (req, res, next) => {
-    FileController.getFileById(req.params.id)
+exports.getNoteById = (req, res, next) => {
+    NoteController.getNoteById(req.params.id)
         .then((result) => {
             if(result !== null){
                 req.body.result = result;
                 return next()
             } else {
-                res.status(403).send({ err: "Error this file doesn't exist" })
+                res.status(403).send({ err: "Error this note doesn't exist" })
             }
         })
         .catch(err => {
-            res.status(403).send({ err: "Error getting file by id" })
+            res.status(403).send({ err: "Error getting note by id" })
         })
 }
 
 exports.checkPrivileges = (req, res, next) => {
-    var file = req.body.result
+    var note = req.body.result
 
-    if(file.password.length !== 0 && req.body.password !== file.password){
-        res.status(403).send({ err: "Error wrong password for this file" })
-    } else if(file.visibleToEveryone === false && req.body.owner !== file.owner){
-        res.status(403).send({ err: "You are not autorized to access this file" })
+    if(note.password.length !== 0 && req.body.password !== note.password){
+        res.status(403).send({ err: "Error wrong password for this note" })
+    } else if(note.visibleToEveryone === false && req.body.owner !== note.owner){
+        res.status(403).send({ err: "You are not autorized to access this note" })
     } else {
         return next()
     }
 }
 
-exports.getFiles = (req, res, next) => {
-    FileController.getFiles(req.body.owner, req.body.parent)
+exports.getNotes = (req, res, next) => {
+    NoteController.getNotes(req.body.owner, req.body.parent)
         .then((result) => {
             res.status(201).send(result);
         })
         .catch(err => {
-            res.status(403).send({ err: "Error getting files" })
+            res.status(403).send({ err: "Error getting notes" })
         })
 }
 
-exports.removeFile = (req, res, next) => {
-    FileController.removeFile(req.body.idFile)
+exports.removeNote = (req, res, next) => {
+    NoteController.removeNote(req.body.idNote)
         .then((result) => {
             res.status(201).send(result);
         })
         .catch(err => {
-            res.status(403).send({ err: "Error removing file" })
+            res.status(403).send({ err: "Error removing note" })
         })
 }
 
-exports.removeFileWihCheck = (req, res, next) => {
-    if(req.body.deleteFile !== undefined){
-        FileController.removeFile(req.body.idFile)
+exports.removeNoteWihCheck = (req, res, next) => {
+    if(req.body.deleteNote !== undefined){
+        NoteController.removeNote(req.body.idNote)
         .then((result) => {
             res.status(201).send(result);
         })
         .catch(err => {
-            res.status(403).send({ err: "Error removing file" })
+            res.status(403).send({ err: "Error removing note" })
         })
     } else {
         return next()
     }
 }
 
-exports.searchFile = (req, res, next) => {
+exports.searchNote = (req, res, next) => {
     var search = escapeRegExp(req.body.search)
-    FileController.searchFiles(req.body.owner, search)
+    NoteController.searchNotes(req.body.owner, search)
         .then((result) => {
-            req.body.files = result
+            req.body.notes = result
             return next()
         })
         .catch(err => {
-            res.status(403).send({ err: "Error searching files" })
+            res.status(403).send({ err: "Error searching notes" })
         })
 }
 
-exports.deleteFile = (req, res, next) => {
-    FileController.deleteFile(req.body.owner, req.body.idFile)
+exports.deleteNote = (req, res, next) => {
+    NoteController.deleteNote(req.body.owner, req.body.idNote)
         .then((result) => {
             return next()
         })
         .catch(err => {
-            res.status(403).send({ err: "Error deleting file" })
+            res.status(403).send({ err: "Error deleting note" })
         })
 }
 
-exports.deleteFileGrid = (req, res) => {
-    FileController.deleteFileGrid(req, res)
+exports.deleteNoteGrid = (req, res) => {
+    NoteController.deleteNoteGrid(req, res)
 }
 
 exports.isOwner = (req, res, next) => {
-    FileController.isOwner(req.body.owner, req.body.idFile)
+    NoteController.isOwner(req.body.owner, req.body.idNote)
         .then((result) => {
             if(result === null){
-                res.status(403).send({ err: "No file found or you are not authorized to access this file" })
+                res.status(403).send({ err: "No note found or you are not authorized to access this note" })
             } else if(result.owner !== req.body.owner){
-                res.status(403).send({ err: "You are not authorized to access this file" })
+                res.status(403).send({ err: "You are not authorized to access this note" })
             } else {
                 return next()
             }
         })
         .catch(err => {
-            res.status(403).send({ err: "Error deleting file" })
+            res.status(403).send({ err: "Error deleting note" })
         })
 }
 
-exports.getFileSharedLink = (req, res, next) => {
-    FileController.getSharedFile(req.body.link)
+exports.getNoteSharedLink = (req, res, next) => {
+    NoteController.getSharedNote(req.body.link)
         .then((result) => {
             res.status(201).send(result);
         })
         .catch(err => {
-            res.status(403).send({ err: "Error getting file" })
+            res.status(403).send({ err: "Error getting note" })
+        })
+}
+
+exports.saveNote = (req, res, next) => {
+    NoteController.saveNote(req.body.owner, req.body.idNote, req.body.title, req.body.text)
+        .then((result) => {
+            res.status(201).send({});
+        })
+        .catch(err => {
+            // print(err)
+            res.status(403).send({ err: "Error modifying note" })
         })
 }

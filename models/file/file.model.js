@@ -117,36 +117,36 @@ exports.getFiles = (owner, parent) => {
 exports.searchFiles = (owner, search) => {
 	return new Promise((resolve, reject) => {
 		File.find({ name: { "$regex": new RegExp("^" + search.toLowerCase(), "i") }, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {})
-			.limit(50).exec(function (err, folder) {
+			.limit(50).exec(function (err, file) {
 			if (err) return reject(err)
-			resolve(folder)
+			resolve(file)
 		})
 	})
 }
 
 exports.deleteFile = (owner, idFile) => {
 	return new Promise((resolve, reject) => {
-		File.findOneAndDelete({ owner: owner, idFile: idFile }, {}, function (err, folder) {
+		File.findOneAndDelete({ owner: owner, idFile: idFile }, {}, function (err, file) {
 			if (err) return reject(err)
-			resolve(folder)
+			resolve(file)
 		})
 	})
 }
 
 exports.isOwner = (owner, idFile) => {
 	return new Promise((resolve, reject) => {
-		File.findOne({ owner: owner, idFile: idFile }, {}, function (err, folder) {
+		File.findOne({ owner: owner, idFile: idFile }, {}, function (err, file) {
 			if (err) return reject(err)
-			resolve(folder)
+			resolve(file)
 		})
 	})
 }
 
 exports.getSharedFile = (link) => {
 	return new Promise((resolve, reject) => {
-		File.findOne({ linkView: link }, {}, function (err, folder) {
+		File.findOne({ linkView: link }, {}, function (err, file) {
 			if (err) return reject(err)
-			resolve(folder)
+			resolve(file)
 		})
 	})
 }

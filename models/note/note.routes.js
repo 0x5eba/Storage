@@ -1,37 +1,35 @@
-const FileController = require('./note.controller')
+const NoteController = require('./note.controller')
 const AuthController = require("../authorization/auth.js")
 const FolderController = require('../folder/folder.controller')
 const fs = require('fs')
 
 exports.routesConfig = function (app) {
-	app.post('/api/file/uploadFile', [
-        AuthController.proofTokenForUpload,
-        FolderController.checkIfFolderExistForFile,
-        FileController.removeFileWihCheck,
-        FileController.uploadFile
+	app.post('/api/note/createNote', [
+        AuthController.proofToken,
+        FolderController.checkIfFolderExist,
+        NoteController.createNote
     ]);
 
-    app.post('/api/file/getFiles', [
+    app.post('/api/note/getNotes', [
         AuthController.proofToken,
-        FileController.getFiles
+        NoteController.getNotes
     ]);
 
-    app.delete('/api/file/deleteFile', [
+    app.delete('/api/note/deleteNote', [
         AuthController.proofToken,
-        FileController.isOwner,
-        FileController.deleteFile,
-        FileController.deleteFileGrid,
+        NoteController.isOwner,
+        NoteController.deleteNote,
+        NoteController.deleteNoteGrid,
     ]);
 
-    app.post('/api/file/getFile', [
+    app.post('/api/note/getSharedNote', [
         AuthController.proofToken,
-        FileController.getFile,
-        FileController.checkPrivileges,
-        FileController.getFileFormGridfs,
+        NoteController.getNoteSharedLink,
     ]);
 
-    app.post('/api/file/getSharedFile', [
+    app.patch('/api/folder/saveNote', [
         AuthController.proofToken,
-        FileController.getFileSharedLink,
+        NoteController.isOwner,
+        NoteController.saveNote,
     ]);
 }
