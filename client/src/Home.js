@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { Upload, message, Button as ButtonAntd, Input as InputAntd } from 'antd';
+import { Upload, message, Input as InputAntd } from 'antd';
 import { UploadOutlined, FolderAddOutlined, FileAddOutlined } from '@ant-design/icons';
 import 'antd/dist/antd.css';
 
@@ -113,15 +113,20 @@ class Home extends Component {
 				})
 		}
 
-		if(this.getParent() === "/"){
-			var msg = ""
-			if(this.state.isMobile === false){
-				msg = "Right click on file/folder for more actions"
-			} else {
-				msg = "Long press on file/folder for more actions"
+		if(window.localStorage.getItem("message1") === null){
+			if(this.getParent() === "/"){
+				var msg = ""
+				if(this.state.isMobile === false){
+					msg = "Right click on file/folder for more actions"
+				} else {
+					msg = "Long press on file/folder for more actions"
+				}
+				message.info(msg, 6)
 			}
-			message.info(msg, 5)
+
+			window.localStorage.setItem("message1", "true")
 		}
+		
 	}
 
 	getFoldersAndFiles = () => {

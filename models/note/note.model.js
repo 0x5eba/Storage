@@ -84,6 +84,15 @@ exports.deleteNote = (owner, idNote) => {
 	})
 }
 
+exports.deleteNotesByParent = (parents) => {
+	return new Promise((resolve, reject) => {
+		Note.deleteMany({ parent: { $in: parents } }, {}, function (err, note) {
+			if (err) return reject(err)
+			resolve({})
+		})
+	})
+}
+
 exports.isOwner = (owner, idNote) => {
 	return new Promise((resolve, reject) => {
 		Note.findOne({ owner: owner, idNote: idNote }, {}, function (err, note) {

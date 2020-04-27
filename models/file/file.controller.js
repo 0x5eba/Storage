@@ -128,7 +128,13 @@ exports.deleteFile = (req, res, next) => {
 }
 
 exports.deleteFileGrid = (req, res) => {
-    FileController.deleteFileGrid(req, res)
+    FileController.deleteFileGrid(req.body.idFile)
+        .then((result) => {
+            res.status(201).send({})
+        })
+        .catch(err => {
+            res.status(403).send({ err: "Error deleting file from grid" })
+        })
 }
 
 exports.isOwner = (req, res, next) => {

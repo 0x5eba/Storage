@@ -1,4 +1,6 @@
 const FolderController = require('./folder.model')
+const FileController = require('../file/file.model')
+const NoteController = require('../note/note.model')
 const crypto = require("crypto")
 const bcrypt = require("bcryptjs")
 const escapeRegExp = require('lodash.escaperegexp')
@@ -163,11 +165,38 @@ exports.getFolders = (req, res, next) => {
 
 exports.deleteFolders = async (req, res, next) => {
     var folders = [req.body.idFolder]
+    var allFolders = new Set()
+    allFolders.add(req.body.idFolder)
+
 	while(folders.length !== 0){
 		await FolderController.deleteFolders(folders)
             .then((result) => {
                 folders = result
+
+                for(let a = 0; a < result.length; ++a){
+                    allFolders.add(result[a])
+                }
+
                 if(folders.length === 0){
+
+                    allFolders = [...allFolders]
+
+                    FileController.deleteFilesByParents(allFolders)
+                        .then(() => {
+
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+
+                    NoteController.deleteNotesByParent(allFolders)
+                        .then(() => {
+
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+
                     return res.status(201).send({});
                 }
             })

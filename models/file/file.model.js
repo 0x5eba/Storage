@@ -80,7 +80,7 @@ exports.removeFile = (idFile) => {
 
 exports.getFileFormGridfs = (req, res) => { 
     gfs.files.findOne({ filename: req.body.idFile }, (err, file) => { // "metadata.name": req.body.name
-        if (!file || file.length === 0) {
+        if (!file || file.length === 0 || err !== null) {
             return res.status(404).send({ err: "File doesn't exist" });
         }
 
@@ -96,13 +96,38 @@ exports.getFileFormGridfs = (req, res) => {
     });
 }
 
-exports.deleteFileGrid = (req, res) => { 
-    gfs.files.remove({ filename: req.body.idFile }, (err, file) => {
-        if (!file || file.length === 0) {
-            return res.status(404).send({ err: "File doesn't exist" })
-        }
-        res.status(201).send({})
-    });
+exports.deleteFileGrid = (idFile) => {
+	return new Promise((resolve, reject) => {
+		gfs.files.remove({ filename: idFile }, (err, file) => {
+			if (!file || file.length === 0 || err !== null) {
+				return reject(err)
+			}
+			resolve(file)
+		});
+    })
+}
+
+exports.deleteFilesByParents = (parents) => {
+	return new Promise((resolve, reject) => {
+
+		File.find({ parent: { $in: parents } }, {}, function (err, files) {
+			if (err) return reject(err)
+			
+			for(let a = 0; a < files.length; ++a){
+				gfs.files.remove({ filename: files[a]['idFile'] }, (err, file) => {
+					if (!file || file.length === 0 || err !== null) {
+						return
+					}
+				});
+			}
+
+			File.deleteMany({ parent: { $in: parents } }, {}, function (err, file) {
+				if (err) return reject(err)
+				resolve({})
+			})
+		})
+		
+    })
 }
 
 exports.getFiles = (owner, parent) => {
