@@ -50,6 +50,7 @@ class Home extends Component {
             viewLink: null,
 			passwords: [],
 			modifyFolder: false,
+			isType: "",
 
 			url: null,
 			downloading: false,
@@ -57,7 +58,6 @@ class Home extends Component {
 
 			mouseX: null,
 			mouseY: null,
-			isFile: false,
 			infos: null,
 
 			searchFolders: [],
@@ -135,6 +135,21 @@ class Home extends Component {
 				viewLink: viewLink,
 			}, () => {
 				this.getSharedFile()
+			})
+
+			return
+		}
+
+		if (this.state.path.includes("/note/")) {
+			// query per prendere solo quel file, e metterlo in this.state.files
+
+			var viewLink = this.state.path.split('/note/')
+			viewLink = viewLink[viewLink.length - 1]
+
+			this.setState({
+				viewLink: viewLink,
+			}, () => {
+				this.getSharedNote()
 			})
 
 			return
@@ -602,20 +617,30 @@ class Home extends Component {
 	}
 
 	remove = () => {
-		var data = {
-			idFolder: this.state.infos.idFolder,
-			owner: this.state.owner,
-			token: this.state.token,
-		}
-		var url = "/api/folder/deleteFolders"
+		var data = {}
+		var url = ""
 
-		if (this.state.isFile === true) {
+		if(this.state.isType === "file"){
 			data = {
 				idFile: this.state.infos.idFile,
 				owner: this.state.owner,
 				token: this.state.token,
 			}
-			url = "/api/file/deleteFile"
+			url = "/api/folder/deleteFile"
+		} else if(this.state.isType === "folder") {
+			data = {
+				idFolder: this.state.infos.idFolder,
+				owner: this.state.owner,
+				token: this.state.token,
+			}
+			url = "/api/folder/deleteFolders"
+		} else {
+			data = {
+				idNote: this.state.infos.idNote,
+				owner: this.state.owner,
+				token: this.state.token,
+			}
+			url = "/api/folder/deleteNote"
 		}
 
 		fetch(url, {
@@ -628,7 +653,7 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-					message.success(`${this.state.isFile === true ? "File" : "Folder"} deleted`)
+					message.success(`${this.state.isType} deleted`)
 					this.getFoldersAndFiles()
 				} else {
 					message.error(data.err)
@@ -706,6 +731,66 @@ class Home extends Component {
 			.catch((error) => {
 				console.error('Error:', error)
 			})
+	}
+
+	getSharedNote = () => {
+		var data = {
+			link: this.state.viewLink,
+			owner: this.state.owner,
+			token: this.state.token,
+		}
+
+		fetch("/api/note/getSharedNote", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				if (data.err === undefined) {
+					this.setState({
+						notes: [data]
+					})
+				} else {
+					console.error('Error:', data.err)
+				}
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+	}
+
+	getShareLinkNote = () => {
+		var path = this.state.path.split("/")
+        path.pop()
+        path = path.join("/") + "/"
+
+        var text = path + "note/" + this.state.infos.linkView
+
+		if (!navigator.clipboard) {
+			var textArea = document.createElement("textarea")
+			textArea.value = text
+			document.body.appendChild(textArea)
+			textArea.focus()
+			textArea.select()
+			try {
+				var successful = document.execCommand('copy');
+				var msg = successful ? 'successful' : 'unsuccessful';
+				console.log(msg)
+				message.success("Link copied to clipboard!")
+			} catch (err) {
+				message.error("Failed to copy")
+			}
+			document.body.removeChild(textArea)
+			return
+		}
+		navigator.clipboard.writeText(text).then(function () {
+			message.success("Link copied to clipboard!")
+		}, function (err) {
+			message.error("Failed to copy")
+		})
 	}
 
 	createNote = () => {
@@ -814,8 +899,9 @@ class Home extends Component {
 							: undefined
 					}
 				>
-					{this.state.isFile === true ?
+					{this.state.isType === "file" && 
 						<div style={{ width: "250px" }}>
+							{this.state.infos !== null && this.state.owner === this.state.infos.owner && 
 							<MenuItem onClick={() => {
 								this.remove()
 								this.closeMenu()
@@ -826,7 +912,8 @@ class Home extends Component {
 								<Typography variant="inherit" noWrap>
 									Remove
 								</Typography>
-							</MenuItem>
+							</MenuItem>}
+
 							<MenuItem onClick={() => {
 								this.downloadFile()
 								this.closeMenu()
@@ -838,6 +925,7 @@ class Home extends Component {
 									Download
 								</Typography>
 							</MenuItem>
+
 							<MenuItem onClick={() => {
 								this.getShareLinkFile()
 								this.closeMenu()
@@ -850,10 +938,11 @@ class Home extends Component {
 								</Typography>
 							</MenuItem>
 							{/* <MenuItem onClick={}>Rename</MenuItem> */}
+						</div>}
 
-						</div>
-						:
+					{this.state.isType === "folder" && 
 						<div style={{ width: "250px" }}>
+							{this.state.infos !== null && this.state.owner === this.state.infos.owner && 
 							<MenuItem onClick={() => {
 								this.remove()
 								this.closeMenu()
@@ -864,7 +953,8 @@ class Home extends Component {
 								<Typography variant="inherit" noWrap>
 									Remove
 								</Typography>
-							</MenuItem>
+							</MenuItem>}
+
                             <MenuItem onClick={() => {
 								this.getShareLinkFolder()
 								this.closeMenu()
@@ -876,6 +966,7 @@ class Home extends Component {
 									Get shareable link
 								</Typography>
 							</MenuItem>
+
 							{this.state.infos !== null && this.state.owner === this.state.infos.owner && 
 								<MenuItem onClick={() => {
 									this.openModal(true)
@@ -888,9 +979,36 @@ class Home extends Component {
 										Modify
 									</Typography>
 								</MenuItem>}
+						</div>}
+
+					{this.state.isType === "note" && 
+						<div style={{ width: "250px" }}>
+							{this.state.infos !== null && this.state.owner === this.state.infos.owner && 
+							<MenuItem onClick={() => {
+								this.remove()
+								this.closeMenu()
+							}}>
+								<ListItemIcon>
+									<DraftsIcon fontSize="small" />
+								</ListItemIcon>
+								<Typography variant="inherit" noWrap>
+									Remove
+								</Typography>
+							</MenuItem>}
 							
-						</div>
-					}
+                            <MenuItem onClick={() => {
+								this.getShareLinkNote()
+								this.closeMenu()
+							}}>
+								<ListItemIcon>
+									<DraftsIcon fontSize="small" />
+								</ListItemIcon>
+								<Typography variant="inherit" noWrap>
+									Get shareable link
+								</Typography>
+							</MenuItem>
+						</div>}
+					
 				</Menu>
 
 				{/* create / modify note */}
@@ -928,6 +1046,7 @@ class Home extends Component {
 					</Modal.Body>
 					<Modal.Footer>
 						{this.state.edit === false ?
+						this.state.infos !== null && this.state.owner === this.state.infos.owner && 
 						<Button variant="contained" style={{
 							backgroundColor: "#2196f3",
 							marginLeft: "20px",
@@ -1201,13 +1320,13 @@ class Home extends Component {
 											this.setState({
 												mouseX: e.clientX - 2,
 												mouseY: e.clientY - 4,
-												isFile: false,
+												isType: "folder",
 												infos: item,
 											})
 										}}
 										onClick={() => {
 											this.setState({
-												isFile: false,
+												isType: "folder",
 												infos: item,
 											}, () => {
 												this.clickFolder()
@@ -1252,6 +1371,8 @@ class Home extends Component {
 											idNote: item.idNote,
 											titleNote: item.title,
 											textNote: item.text,
+											infos: item,
+											isType: "note",
 										})
 									}}
 									onClick={() => {
@@ -1259,6 +1380,8 @@ class Home extends Component {
 											idNote: item.idNote,
 											titleNote: item.title,
 											textNote: item.text,
+											infos: item,
+											isType: "note",
 										}, () => {
 											this.openModalShowNote()
 										})
@@ -1302,13 +1425,13 @@ class Home extends Component {
 											this.setState({
 												mouseX: e.clientX - 2,
 												mouseY: e.clientY - 4,
-												isFile: true,
+												isType: "file",
 												infos: item,
 											}, () => this.clickFile(false))
 										}}
 										onClick={() => {
 											this.setState({
-												isFile: true,
+												isType: "file",
 												infos: item,
 											}, () => {
 												this.clickFile()
