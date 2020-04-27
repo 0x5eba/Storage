@@ -1369,8 +1369,8 @@ class Home extends Component {
 									style={{
 										width: "250px", height: "250px", margin: "15px", padding: "15px", paddingTop: "10px",
 										textTransform: 'none', backgroundColor: "white", textAlign: "left",
-										justifyContent: "left", fontSize: "17px", borderRadius: "10px",
-										display: "inline-block",  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+										justifyContent: "left", fontSize: "17px", borderRadius: "10px", 
+										display: "inline-block",  whiteSpace: "nowrap", textOverflow: "ellipsis", overflowY: "scroll", 
 									}}
 									onContextMenu={(e) => {
 										e.preventDefault()
