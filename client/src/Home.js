@@ -172,7 +172,6 @@ class Home extends Component {
 				console.error('Error:', error)
 			})
 
-
 		fetch("/api/file/getFiles", {
 			method: 'POST',
 			headers: {
@@ -185,6 +184,37 @@ class Home extends Component {
 				if (data.err === undefined) {
 					this.setState({
 						files: data
+					})
+				} else {
+					message.error(data.err)
+				}
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+
+		this.getNotes()
+	}
+
+	getNotes = () => {
+		var data = {
+			parent: this.getParent(),
+			owner: this.state.owner,
+            token: this.state.token,
+		}
+		
+		fetch("/api/note/getNotes", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				if (data.err === undefined) {
+					this.setState({
+						notes: data
 					})
 				} else {
 					message.error(data.err)
@@ -684,6 +714,7 @@ class Home extends Component {
 			text: this.state.textNote,
 			owner: this.state.owner,
 			token: this.state.token,
+			parent: this.getParent()
 		}
 
 		fetch("/api/note/createNote", {
@@ -747,6 +778,8 @@ class Home extends Component {
 			createNote: true,
 			edit: true,
 			idNote: "",
+			titleNote: "",
+			textNote: "",
 		})
 	}
 
@@ -755,6 +788,14 @@ class Home extends Component {
 			showModalNote: true,
 			createNote: false,
 			edit: false,
+		})
+	}
+
+	closeNoteModal = () => {
+		this.setState({
+			showModalNote: false,
+		}, () => { 
+			this.getNotes()
 		})
 	}
 
@@ -852,8 +893,8 @@ class Home extends Component {
 					}
 				</Menu>
 
-				
-				<Modal show={this.state.showModalNote} onHide={this.closeModal}
+				{/* create / modify note */}
+				<Modal show={this.state.showModalNote} onHide={this.closeNoteModal}
 					size="lg"
 					aria-labelledby="contained-modal-title-vcenter"
 					centered>
@@ -1210,13 +1251,15 @@ class Home extends Component {
 												mouseX: e.clientX - 2,
 												mouseY: e.clientY - 4,
 												idNote: item.idNote,
-												infos: item,
+												titleNote: item.title,
+												textNote: item.text,
 											})
 										}}
 										onClick={() => {
 											this.setState({
 												idNote: item.idNote,
-												infos: item,
+												titleNote: item.title,
+												textNote: item.text,
 											}, () => {
 												this.openModalShowNote()
 											})

@@ -1,7 +1,6 @@
 const NoteController = require('./note.controller')
 const AuthController = require("../authorization/auth.js")
 const FolderController = require('../folder/folder.controller')
-const fs = require('fs')
 
 exports.routesConfig = function (app) {
 	app.post('/api/note/createNote', [
@@ -19,7 +18,6 @@ exports.routesConfig = function (app) {
         AuthController.proofToken,
         NoteController.isOwner,
         NoteController.deleteNote,
-        NoteController.deleteNoteGrid,
     ]);
 
     app.post('/api/note/getSharedNote', [
@@ -27,7 +25,7 @@ exports.routesConfig = function (app) {
         NoteController.getNoteSharedLink,
     ]);
 
-    app.patch('/api/folder/saveNote', [
+    app.patch('/api/note/saveNote', [
         AuthController.proofToken,
         NoteController.isOwner,
         NoteController.saveNote,

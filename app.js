@@ -10,8 +10,10 @@ app.use(bodyParser.json())
 
 const FileRouter = require('./models/file/file.routes.js')
 const FolderRouter = require('./models/folder/folder.routes.js')
+const NoteRouter = require('./models/note/note.routes.js')
 FolderRouter.routesConfig(app)
 FileRouter.routesConfig(app)
+NoteRouter.routesConfig(app)
 
 app.use(function (req, res, next) {
 	res.header('Access-Control-Allow-Credentials', 'true')

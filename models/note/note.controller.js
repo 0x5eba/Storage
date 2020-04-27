@@ -6,13 +6,13 @@ exports.createNote = (req, res) => {
     crypto.randomBytes(16, (err, buf) => {
         if (err) return res.status(403).send({ err: "Error creating note" })
 
-        if(req.body.password.length !== 0){
-            let salt = bcrypt.genSaltSync(10)
-            let hash = bcrypt.hashSync(req.body.password, salt)
-            req.body.password = hash
-        } else {
-            req.body.password = ""
-        }
+        // if(req.body.password.length !== 0){
+        //     let salt = bcrypt.genSaltSync(10)
+        //     let hash = bcrypt.hashSync(req.body.password, salt)
+        //     req.body.password = hash
+        // } else {
+        //     req.body.password = ""
+        // }
 
         var idNote = buf.toString('hex') + Date.now()
 
@@ -34,10 +34,6 @@ exports.createNote = (req, res) => {
                 res.status(403).send({ err: "Error creating note" })
             })
     })
-}
-
-exports.getNoteFormGridfs = (req, res) => {
-    NoteController.getNoteFormGridfs(req, res)
 }
 
 exports.getNote = (req, res, next) => {
@@ -131,15 +127,11 @@ exports.searchNote = (req, res, next) => {
 exports.deleteNote = (req, res, next) => {
     NoteController.deleteNote(req.body.owner, req.body.idNote)
         .then((result) => {
-            return next()
+            res.status(201).send(result);
         })
         .catch(err => {
             res.status(403).send({ err: "Error deleting note" })
         })
-}
-
-exports.deleteNoteGrid = (req, res) => {
-    NoteController.deleteNoteGrid(req, res)
 }
 
 exports.isOwner = (req, res, next) => {

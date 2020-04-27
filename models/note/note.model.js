@@ -66,33 +66,6 @@ exports.removeNote = (idNote) => {
     })
 }
 
-exports.getNoteFormGridfs = (req, res) => { 
-    gfs.notes.findOne({ notename: req.body.idNote }, (err, note) => { // "metadata.name": req.body.name
-        if (!note || note.length === 0) {
-            return res.status(404).send({ err: "Note doesn't exist" });
-        }
-
-        const readstream = gfs.createReadStream(note.notename)
-        res.header({ 'Content-type': note.contentType })
-        readstream.on('error', (err) => {
-            res.status(404).send({ err: "Error getting the note" })
-        })
-        readstream.pipe(res)
-        readstream.on('end', function () {
-            res.status(201).end()
-        })
-    });
-}
-
-exports.deleteNoteGrid = (req, res) => { 
-    gfs.notes.remove({ notename: req.body.idNote }, (err, note) => {
-        if (!note || note.length === 0) {
-            return res.status(404).send({ err: "Note doesn't exist" })
-        }
-        res.status(201).send({})
-    });
-}
-
 exports.getNotes = (owner, parent) => {
     return new Promise((resolve, reject) => {
         Note.find({ parent: parent, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {}, function (err, note) {
@@ -100,16 +73,6 @@ exports.getNotes = (owner, parent) => {
 			resolve(note)
 		})
     })
-}
-
-exports.searchNotes = (owner, search) => {
-	return new Promise((resolve, reject) => {
-		Note.find({ name: { "$regex": new RegExp("^" + search.toLowerCase(), "i") }, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {})
-			.limit(50).exec(function (err, note) {
-			if (err) return reject(err)
-			resolve(note)
-		})
-	})
 }
 
 exports.deleteNote = (owner, idNote) => {
