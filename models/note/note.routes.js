@@ -5,7 +5,7 @@ const FolderController = require('../folder/folder.controller')
 exports.routesConfig = function (app) {
 	app.post('/api/note/createNote', [
         AuthController.proofToken,
-        FolderController.checkIfFolderExist,
+        FolderController.checkIfFolderExistForNote,
         NoteController.createNote
     ]);
 

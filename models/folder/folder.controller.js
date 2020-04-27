@@ -86,7 +86,7 @@ exports.checkPrivileges = (req, res, next) => {
     }
 }
 
-exports.checkIfFolderExistForFile = (req, res, next) => {
+exports.checkIfFolderExistForNote = (req, res, next) => {
     if(req.body.parent === "/"){
         req.body.deleteFile = true
         return next()
@@ -107,6 +107,25 @@ exports.checkIfFolderExistForFile = (req, res, next) => {
             // print(err)
             req.body.deleteFile = true
             return next()
+        })
+}
+
+exports.checkIfFolderExistForFile = (req, res, next) => {
+    if(req.body.parent === "/"){
+        return res.status(403).send({ err: "You can not create not here" })
+    }
+
+    FolderController.getFolder(req.body.parent)
+        .then((result) => {
+            if(result !== null){
+                req.body.parent = result.idFolder
+                return next()
+            } else {
+                res.status(403).send({ err: "Error this folder doesn't exist" })
+            }
+        })
+        .catch(err => {
+            res.status(403).send({ err: "Error check for folder" })
         })
 }
 
