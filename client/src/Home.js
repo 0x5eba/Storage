@@ -626,7 +626,7 @@ class Home extends Component {
 				owner: this.state.owner,
 				token: this.state.token,
 			}
-			url = "/api/folder/deleteFile"
+			url = "/api/file/deleteFile"
 		} else if(this.state.isType === "folder") {
 			data = {
 				idFolder: this.state.infos.idFolder,
@@ -640,7 +640,7 @@ class Home extends Component {
 				owner: this.state.owner,
 				token: this.state.token,
 			}
-			url = "/api/folder/deleteNote"
+			url = "/api/note/deleteNote"
 		}
 
 		fetch(url, {
@@ -995,7 +995,7 @@ class Home extends Component {
 									Remove
 								</Typography>
 							</MenuItem>}
-							
+
                             <MenuItem onClick={() => {
 								this.getShareLinkNote()
 								this.closeMenu()
