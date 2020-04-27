@@ -1236,39 +1236,41 @@ class Home extends Component {
 							}
 						}).map((item) => {
 							return (
-								<div className="notes" key={item._id}>
-									<Button
-										props={item}
-										variant="contained"
-										className="buttons-notes"
-										style={{
-											textTransform: 'none', backgroundColor: "white", textAlign: "left",
-											justifyContent: "left", fontSize: "17px", paddingLeft: "20px"
-										}}
-										onContextMenu={(e) => {
-											e.preventDefault()
-											this.setState({
-												mouseX: e.clientX - 2,
-												mouseY: e.clientY - 4,
-												idNote: item.idNote,
-												titleNote: item.title,
-												textNote: item.text,
-											})
-										}}
-										onClick={() => {
-											this.setState({
-												idNote: item.idNote,
-												titleNote: item.title,
-												textNote: item.text,
-											}, () => {
-												this.openModalShowNote()
-											})
-										}}
-									>
-									<Typography variant="inherit" noWrap >
-										
-									</Typography>
-									</Button>
+								<div key={item._id} props={item}
+									variant="contained"
+									style={{
+										width: "250px", height: "250px", margin: "15px", padding: "15px", paddingTop: "10px",
+										textTransform: 'none', backgroundColor: "white", textAlign: "left",
+										justifyContent: "left", fontSize: "17px", borderRadius: "10px",
+										display: "inline-block",  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+									}}
+									onContextMenu={(e) => {
+										e.preventDefault()
+										this.setState({
+											mouseX: e.clientX - 2,
+											mouseY: e.clientY - 4,
+											idNote: item.idNote,
+											titleNote: item.title,
+											textNote: item.text,
+										})
+									}}
+									onClick={() => {
+										this.setState({
+											idNote: item.idNote,
+											titleNote: item.title,
+											textNote: item.text,
+										}, () => {
+											this.openModalShowNote()
+										})
+									}}>
+									
+									<div style={{ height: "50px" }}>
+										<h3><b>{item.title}</b></h3>
+									</div>
+									<div style={{ height: "200px" }}>
+										<Note text={item.text}></Note>
+									</div>
+
 								</div>
 							)
 						})}

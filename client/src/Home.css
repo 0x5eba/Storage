@@ -40,16 +40,6 @@ body {
   align-items: top;
 }
 
-.notes {
-  margin: 15px;
-  width: 250px;
-  height: 250px;
-  display: flex;
-  background-color: white;
-  justify-content: center;
-  align-items: top;
-}
-
 .icons {
   color: #5F6368;
   width: auto;
