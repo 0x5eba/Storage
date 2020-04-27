@@ -6,7 +6,8 @@ const bodyParser = require('body-parser')
 const path = require("path")
 
 app.use(cors())
-app.use(bodyParser.json({ limit: '20mb' }))
+// app.use(bodyParser.json({ limit: '20mb' }))
+app.use(express.bodyParser({limit: '20mb'}));
 
 const FileRouter = require('./models/file/file.routes.js')
 const FolderRouter = require('./models/folder/folder.routes.js')
