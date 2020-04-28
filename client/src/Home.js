@@ -509,12 +509,12 @@ class Home extends Component {
 	}
 
 	showMessageUploadFile = (info) => {
-		setTimeout(hide, 0)
-
 		if (info.file.status === 'done') {
+			setTimeout(hide, 0)
 			message.success(`${info.file.name} file uploaded successfully`);
 			this.getFoldersAndFiles()
 		} else if (info.file.status === 'error') {
+			setTimeout(hide, 0)
 			message.error(`${info.file.name} file upload failed.`);
 		}
 	}
