@@ -69,6 +69,7 @@ class Home extends Component {
 			titleNote: "",
 			textNote: "",
 			idNote: "",
+			savingNote: false,
 
 
 			isMobile: window.matchMedia("only screen and (max-width: 760px)").matches,
@@ -718,6 +719,10 @@ class Home extends Component {
 			token: this.state.token,
 		}
 
+		this.setState({
+			savingNote: true,
+		})
+
 		fetch("/api/note/saveNote", {
 			method: 'PATCH',
 			headers: {
@@ -728,7 +733,9 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-					
+					this.setState({
+						savingNote: false,
+					})
 				} else {
 					console.error('Error:', data.err)
 				}
@@ -1062,11 +1069,15 @@ class Home extends Component {
 							marginRight: "20px"
 						}} onClick={this.editText}>Edit</Button>
 						:
-						<Button variant="contained" style={{
-							backgroundColor: "#4caf50",
-							marginLeft: "20px",
-							marginRight: "20px"
-						}} onClick={this.previewText}>Preview</Button>
+						<div>
+							<p>{this.state.savingNote === false ? "Saved!" : "Saving..."}</p>
+							<Button variant="contained" style={{
+								backgroundColor: "#4caf50",
+								marginLeft: "20px",
+								marginRight: "20px"
+							}} onClick={this.previewText}>Preview</Button>
+						</div>
+						
 						}
 					</Modal.Footer>
 				</Modal>
