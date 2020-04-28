@@ -135,8 +135,6 @@ class Home extends Component {
 
 	getFoldersAndFiles = () => {
 		if (this.state.path.includes("/file/")) {
-			// query per prendere solo quel file, e metterlo in this.state.files
-
 			var viewLink = this.state.path.split('/file/')
 			viewLink = viewLink[viewLink.length - 1]
 
@@ -150,8 +148,6 @@ class Home extends Component {
 		}
 
 		if (this.state.path.includes("/note/")) {
-			// query per prendere solo quel file, e metterlo in this.state.files
-
 			var viewLink = this.state.path.split('/note/')
 			viewLink = viewLink[viewLink.length - 1]
 
@@ -336,7 +332,6 @@ class Home extends Component {
 			.then(data => {
 				if (data.err === undefined) {
                     
-                    // salva la password in sessionStorage
                     var newPasswords = [...this.state.passwords, this.state.password]
                     window.sessionStorage.setItem("passwords", JSON.stringify(newPasswords))
 
