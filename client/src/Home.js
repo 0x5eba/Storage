@@ -30,6 +30,8 @@ import Note from './Note'
 
 import "./Home.css"
 
+var timerId, hide;
+
 class Home extends Component {
 	constructor(props) {
 		super(props);
@@ -76,6 +78,7 @@ class Home extends Component {
 		}
 
 		this.getFoldersAndFiles = this.getFoldersAndFiles.bind(this)
+		this.saveNote = this.saveNote.bind(this)
     }
     
     UNSAFE_componentWillMount = () => {
@@ -408,6 +411,7 @@ class Home extends Component {
 				console.log(data)
 				if (data.err === undefined) {
 					this.getFoldersAndFiles()
+
 					message.success(`${this.state.name} folder updated successfully`);
 				} else {
 					message.error(`Folder update failed.`)
@@ -505,6 +509,8 @@ class Home extends Component {
 	}
 
 	showMessageUploadFile = (info) => {
+		setTimeout(hide, 0)
+
 		if (info.file.status === 'done') {
 			message.success(`${info.file.name} file uploaded successfully`);
 			this.getFoldersAndFiles()
@@ -733,9 +739,11 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-					this.setState({
-						savingNote: false,
-					})
+					setTimeout(() => {
+						this.setState({
+							savingNote: false,
+						})
+					}, 500)
 				} else {
 					console.error('Error:', data.err)
 				}
@@ -848,6 +856,10 @@ class Home extends Component {
 	}
 
 	handleInputNote = (e) => {
+		if (!(timerId == null)) {
+			clearTimeout(timerId);
+		}
+
 		if(this.state.createNote === true){
 			// create note
 			setTimeout(this.preventDuplicate(e), Math.random()*3000 + Math.random()*1000);
@@ -857,7 +869,9 @@ class Home extends Component {
 				[e.target.name]: e.target.value,
 			}, () => {
 				if(this.state.idNote !== ""){
-					this.saveNote()
+					timerId = setTimeout(() => {
+						this.saveNote()
+					}, 500)
 				}
 			})
 		}
@@ -1069,14 +1083,14 @@ class Home extends Component {
 							marginRight: "20px"
 						}} onClick={this.editText}>Edit</Button>
 						:
-						<div>
-							<p>{this.state.savingNote === false ? "Saved!" : "Saving..."}</p>
+						<Row>
+							<div>{this.state.savingNote === false ? "Saved!" : "Saving..."}</div>
 							<Button variant="contained" style={{
 								backgroundColor: "#4caf50",
 								marginLeft: "20px",
 								marginRight: "20px"
 							}} onClick={this.previewText}>Preview</Button>
-						</div>
+						</Row>
 						
 						}
 					</Modal.Footer>
@@ -1244,6 +1258,9 @@ class Home extends Component {
 													return false
 												}
 											}
+
+											hide = message.loading('Uploading..', 0)
+											
 											return true
 										},
 										data: {
