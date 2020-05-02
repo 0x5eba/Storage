@@ -84,6 +84,8 @@ exports.getFileFormGridfs = (req, res) => {
             return res.status(404).send({ err: "File doesn't exist" });
         }
 
+		// res.download()
+
         const readstream = gfs.createReadStream(file.filename, {highWaterMark: Math.pow(2,16)})
         res.header({ 'Content-type': file.contentType })
         readstream.on('error', (err) => {

@@ -109,5 +109,5 @@ dist
 package-lock.json
 yarn.lock
 ./build
-# ./client/build
-# ./client/yarn.lock
+./client/build
+./client/yarn.lock
