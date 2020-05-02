@@ -4,6 +4,8 @@ Google Drive and Keep clone in a few lines of code.
 
 Storage is a safe place that let you store, share and access your files completely anonymously while keeping them secure.
 
+Developed with MERN (MongoDB, Express, ReactJS, Node.js) stack.
+
 ### Website
 Try Storage here [store.sebastienbiollo.com](https://store.sebastienbiollo.com)
 
