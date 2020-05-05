@@ -27,7 +27,6 @@ import { Row, Col } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 
 import Note from './Note'
-import Shell from './Shell'
 
 import "./Home.css"
 
