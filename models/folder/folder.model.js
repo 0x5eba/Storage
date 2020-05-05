@@ -12,6 +12,7 @@ const FolderModel = new mongoose.Schema({
     password: { type: String, trim: true, default: "" }, // se password !== '' allora devi passargli password per vederlo o essere l'owner
 	linkView: { type: String, trim: true, default: "" }, // sha id
 	visibleToEveryone: { type: Boolean, default: false },
+	createdAt: { type: Date, default: Date.now },
 })
 
 const Folder = mongoose.model('Folder', FolderModel, 'Folder')

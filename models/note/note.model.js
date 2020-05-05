@@ -12,7 +12,8 @@ const NoteModel = new mongoose.Schema({
     text: { type: String, trim: true, default: "" }, 
     password: { type: String, trim: true, default: "" }, // se password !== '' allora devi passargli password per vederlo o essere l'owner
     linkView: { type: String, trim: true, default: "" }, // _id + random_string
-    visibleToEveryone: { type: Boolean, default: true },
+	visibleToEveryone: { type: Boolean, default: true },
+	createdAt: { type: Date, default: Date.now },
 })
 
 const Note = mongoose.model('Note', NoteModel, 'Note')

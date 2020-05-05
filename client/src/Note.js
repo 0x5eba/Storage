@@ -5,7 +5,7 @@ class Note extends Component {
 	render() {
 		return (
 			<div>
-				<MDReactComponent text={this.props.text} style={{wordBreak: "break-all"}} />  
+				<MDReactComponent text={this.props.text} style={{wordBreak: "break-word"}} />  
 			</div>
 		)
 	}

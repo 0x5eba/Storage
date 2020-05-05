@@ -27,6 +27,7 @@ import { Row, Col } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 
 import Note from './Note'
+import Shell from './Shell'
 
 import "./Home.css"
 
@@ -75,6 +76,9 @@ class Home extends Component {
 
 
 			isMobile: window.matchMedia("only screen and (max-width: 760px)").matches,
+
+
+			historyShell: [],
 		}
 
 		this.getFoldersAndFiles = this.getFoldersAndFiles.bind(this)
@@ -180,6 +184,7 @@ class Home extends Component {
                     if(data.passwordRequired === true){
                         this.openModalPassword()
                     } else {
+						console.log(data)
                         this.setState({
                             folders: data
                         })
@@ -202,6 +207,7 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
+					console.log(data)
 					this.setState({
 						files: data
 					})
@@ -233,6 +239,7 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
+					console.log(data)
 					this.setState({
 						notes: data
 					})
@@ -1053,7 +1060,7 @@ class Home extends Component {
 							}
 						</Modal.Title>
 					</Modal.Header>
-					<Modal.Body style={{overflowY: "auto", wordBreak: "break-all", width: "100%", maxHeight: "calc(100vh - 200px)", minHeight: "400px"}}>
+					<Modal.Body style={{overflowY: "auto", wordBreak: "break-word", width: "100%", maxHeight: "calc(100vh - 200px)", minHeight: "400px"}}>
 						<div>
 							{this.state.edit === false ?
 							<Note text={this.state.textNote} style={{width: "100%", minHeight: "100%", borderRadius: "6px", border: "none", 
@@ -1376,7 +1383,7 @@ class Home extends Component {
 
 					<Divider />
 
-					<Row style={{ overflow: "auto", overflowY: "scroll", justifyContent: "center" }}>
+					<Row style={{ overflow: "auto", overflowY: "scroll", justifyContent: "center", height: "auto" }}>
 
 						{this.state.notes.filter(item => {
 							if(this.state.search.length > 0){
@@ -1477,6 +1484,44 @@ class Home extends Component {
 								</div>
 							)
 						})}
+
+						{/* <Row style={{ width: "100%", height: "300px", backgroundColor: "#263238" }}>
+							<Row>
+								<Col sm={2}>
+									<div>
+										<div>
+											{this.state.isType === 'folder' ? <span style={{color: "#54c3f8", margin: "0px"}}>d</span> : <span style={{color: "#656565", margin: "0px"}}>-</span>}
+											<span style={{color: "#cc861e", margin: "0px"}}>r</span>
+											{this.state.isOwner === true ? <span style={{color: "#b83346", margin: "0px"}}>w</span> : <span style={{color: "#656565", margin: "0px"}}>-</span>}
+											{this.state.isType === 'folder' ? <span style={{color: "#6b9c3b", margin: "0px"}}>x</span> : <span style={{color: "#656565", margin: "0px"}}>-</span>}
+											<span style={{color: "#cc861e", margin: "0px"}}>r</span>
+											<span style={{color: "#656565", margin: "0px"}}>-</span>
+											{this.state.isType === 'folder' ? <span style={{color: "#6b9c3b", margin: "0px"}}>x</span> : <span style={{color: "#656565", margin: "0px"}}>-</span>}
+											<span style={{color: "#cc861e", margin: "0px"}}>r</span>
+											<span style={{color: "#656565", margin: "0px"}}>-</span>
+											{this.state.isType === 'folder' ? <span style={{color: "#6b9c3b", margin: "0px"}}>x</span> : <span style={{color: "#656565", margin: "0px"}}>-</span>}
+										</div>
+									</div>
+								</Col>
+
+								<Col sm={1}>
+
+								</Col>
+
+								<Col sm={3}>
+								
+								</Col>
+
+								<Col sm={6}>
+								
+								</Col>
+							</Row>
+
+							<label for="fname">First name:</label>
+							<input type="text" id="fname" name="fname"></input>
+
+						</Row> */}
+
 					</Row>
 				</div>
 			</div>
