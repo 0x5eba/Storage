@@ -1485,43 +1485,6 @@ class Home extends Component {
 							)
 						})}
 
-						{/* <Row style={{ width: "100%", height: "300px", backgroundColor: "#263238" }}>
-							<Row>
-								<Col sm={2}>
-									<div>
-										<div>
-											{this.state.isType === 'folder' ? <span style={{color: "#54c3f8", margin: "0px"}}>d</span> : <span style={{color: "#656565", margin: "0px"}}>-</span>}
-											<span style={{color: "#cc861e", margin: "0px"}}>r</span>
-											{this.state.isOwner === true ? <span style={{color: "#b83346", margin: "0px"}}>w</span> : <span style={{color: "#656565", margin: "0px"}}>-</span>}
-											{this.state.isType === 'folder' ? <span style={{color: "#6b9c3b", margin: "0px"}}>x</span> : <span style={{color: "#656565", margin: "0px"}}>-</span>}
-											<span style={{color: "#cc861e", margin: "0px"}}>r</span>
-											<span style={{color: "#656565", margin: "0px"}}>-</span>
-											{this.state.isType === 'folder' ? <span style={{color: "#6b9c3b", margin: "0px"}}>x</span> : <span style={{color: "#656565", margin: "0px"}}>-</span>}
-											<span style={{color: "#cc861e", margin: "0px"}}>r</span>
-											<span style={{color: "#656565", margin: "0px"}}>-</span>
-											{this.state.isType === 'folder' ? <span style={{color: "#6b9c3b", margin: "0px"}}>x</span> : <span style={{color: "#656565", margin: "0px"}}>-</span>}
-										</div>
-									</div>
-								</Col>
-
-								<Col sm={1}>
-
-								</Col>
-
-								<Col sm={3}>
-								
-								</Col>
-
-								<Col sm={6}>
-								
-								</Col>
-							</Row>
-
-							<label for="fname">First name:</label>
-							<input type="text" id="fname" name="fname"></input>
-
-						</Row> */}
-
 					</Row>
 				</div>
 			</div>
