@@ -12,7 +12,6 @@ import LockIcon from '@material-ui/icons/Lock';
 import FolderSharedIcon from '@material-ui/icons/FolderShared';
 import { Divider } from '@material-ui/core';
 import { TextareaAutosize } from '@material-ui/core';
-import DescriptionIcon from '@material-ui/icons/Description';
 import SearchIcon from '@material-ui/icons/Search';
 import InputAdornment from '@material-ui/core/InputAdornment';
 
@@ -23,7 +22,7 @@ import Typography from '@material-ui/core/Typography';
 import DraftsIcon from '@material-ui/icons/Drafts';
 
 import Modal from 'react-bootstrap/Modal';
-import { Row, Col } from 'reactstrap';
+import { Row } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.css';
 
 import Note from './Note'
@@ -60,6 +59,8 @@ class Home extends Component {
 
 			mouseX: null,
 			mouseY: null,
+			showFoldersMenu: false,
+			showMainMenu: false,
 			infos: null,
 
 			searchFolders: [],
@@ -73,11 +74,7 @@ class Home extends Component {
 			idNote: "",
 			savingNote: false,
 
-
 			isMobile: window.matchMedia("only screen and (max-width: 760px)").matches,
-
-
-			historyShell: [],
 		}
 
 		this.getFoldersAndFiles = this.getFoldersAndFiles.bind(this)
@@ -137,8 +134,9 @@ class Home extends Component {
 	}
 
 	getFoldersAndFiles = () => {
+		var viewLink
 		if (this.state.path.includes("/file/")) {
-			var viewLink = this.state.path.split('/file/')
+			viewLink = this.state.path.split('/file/')
 			viewLink = viewLink[viewLink.length - 1]
 
 			this.setState({
@@ -151,7 +149,7 @@ class Home extends Component {
 		}
 
 		if (this.state.path.includes("/note/")) {
-			var viewLink = this.state.path.split('/note/')
+			viewLink = this.state.path.split('/note/')
 			viewLink = viewLink[viewLink.length - 1]
 
 			this.setState({
@@ -626,6 +624,8 @@ class Home extends Component {
 		this.setState({
 			mouseX: null,
 			mouseY: null,
+			showFoldersMenu: false,
+			showMainMenu: false,
 		})
 	}
 
@@ -744,7 +744,7 @@ class Home extends Component {
 						this.setState({
 							savingNote: false,
 						})
-					}, 500)
+					}, 400)
 				} else {
 					console.error('Error:', data.err)
 				}
@@ -863,7 +863,7 @@ class Home extends Component {
 
 		if(this.state.createNote === true){
 			// create note
-			setTimeout(this.preventDuplicate(e), Math.random()*3000 + Math.random()*1000);
+			setTimeout(this.preventDuplicate(e), Math.random()*1000 + Math.random()*500);
 		} else {
 			// simple update
 			this.setState({
@@ -872,7 +872,7 @@ class Home extends Component {
 				if(this.state.idNote !== ""){
 					timerId = setTimeout(() => {
 						this.saveNote()
-					}, 500)
+					}, 400)
 				}
 			})
 		}
@@ -915,13 +915,92 @@ class Home extends Component {
 		})
 	}
 
+	openFoldersMenu = () => {
+		this.setState({
+			showMainMenu: false,
+			showFoldersMenu: true
+		})
+	}
+
+	moveToFolder = (folder) => {
+		var data = {}
+		var url = ""
+
+		if(this.state.isType === "file"){
+			data = {
+				idFile: this.state.infos.idFile,
+				owner: this.state.owner,
+				token: this.state.token,
+				parent: folder.idFolder,
+			}
+			url = "/api/file/changeFolder"
+		} else {
+			data = {
+				idNote: this.state.infos.idNote,
+				owner: this.state.owner,
+				token: this.state.token,
+				parent: folder.idFolder,
+			}
+			url = "/api/note/changeFolder"
+		}
+
+		fetch(url, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				if (data.err === undefined) {
+					// message.success(`${this.state.isType} deleted`)
+					this.getFoldersAndFiles()
+				} else {
+					message.error(data.err)
+				}
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+	}
+
 	render() {
 		return (
 			<div>
+				<Menu
+					keepMounted
+					open={this.state.showFoldersMenu === true}
+					onClose={this.closeMenu}
+					anchorReference="anchorPosition"
+					anchorPosition={
+						this.state.mouseY !== null && this.state.mouseX !== null
+							? { top: this.state.mouseY, left: this.state.mouseX }
+							: undefined
+					}
+					PaperProps={{
+						style: {
+							maxHeight: 48 * 4.5,
+							width: '250px',
+						},
+					}}
+				>
+					{this.state.folders.map((item, index) => (
+						<MenuItem key={index} onClick={() => {
+							this.moveToFolder(item)
+							this.closeMenu()
+						}}>
+							<Typography variant="inherit" noWrap>
+								{item.name}
+							</Typography>
+						</MenuItem>
+					))}
+				</Menu>
+
                 {/* right click folder / file */}
 				<Menu
 					keepMounted
-					open={this.state.mouseY !== null}
+					open={this.state.showMainMenu === true}
 					onClose={this.closeMenu}
 					anchorReference="anchorPosition"
 					anchorPosition={
@@ -933,17 +1012,31 @@ class Home extends Component {
 					{this.state.isType === "file" && 
 						<div style={{ width: "250px" }}>
 							{this.state.infos !== null && this.state.owner === this.state.infos.owner && 
-							<MenuItem onClick={() => {
-								this.remove()
-								this.closeMenu()
-							}}>
-								<ListItemIcon>
-									<DraftsIcon fontSize="small" />
-								</ListItemIcon>
-								<Typography variant="inherit" noWrap>
-									Remove
-								</Typography>
-							</MenuItem>}
+							<div>
+								<MenuItem onClick={() => {
+									this.remove()
+									this.closeMenu()
+								}}>
+									<ListItemIcon>
+										<DraftsIcon fontSize="small" />
+									</ListItemIcon>
+									<Typography variant="inherit" noWrap>
+										Remove
+									</Typography>
+								</MenuItem>
+
+								<MenuItem onClick={() => {
+									this.openFoldersMenu()
+								}}>
+									<ListItemIcon>
+										<DraftsIcon fontSize="small" />
+									</ListItemIcon>
+									<Typography variant="inherit" noWrap>
+										Move to Folder
+									</Typography>
+								</MenuItem>
+							</div>
+							}
 
 							<MenuItem onClick={() => {
 								this.downloadFile()
@@ -968,7 +1061,6 @@ class Home extends Component {
 									Get shareable link
 								</Typography>
 							</MenuItem>
-							{/* <MenuItem onClick={}>Rename</MenuItem> */}
 						</div>}
 
 					{this.state.isType === "folder" && 
@@ -1015,17 +1107,31 @@ class Home extends Component {
 					{this.state.isType === "note" && 
 						<div style={{ width: "250px" }}>
 							{this.state.infos !== null && this.state.owner === this.state.infos.owner && 
-							<MenuItem onClick={() => {
-								this.remove()
-								this.closeMenu()
-							}}>
-								<ListItemIcon>
-									<DraftsIcon fontSize="small" />
-								</ListItemIcon>
-								<Typography variant="inherit" noWrap>
-									Remove
-								</Typography>
-							</MenuItem>}
+							<div>
+								<MenuItem onClick={() => {
+									this.remove()
+									this.closeMenu()
+								}}>
+									<ListItemIcon>
+										<DraftsIcon fontSize="small" />
+									</ListItemIcon>
+									<Typography variant="inherit" noWrap>
+										Remove
+									</Typography>
+								</MenuItem>
+
+								<MenuItem onClick={() => {
+									this.openFoldersMenu()
+								}}>
+									<ListItemIcon>
+										<DraftsIcon fontSize="small" />
+									</ListItemIcon>
+									<Typography variant="inherit" noWrap>
+										Move to Folder
+									</Typography>
+								</MenuItem>
+							</div>
+							}
 
                             <MenuItem onClick={() => {
 								this.getShareLinkNote()
@@ -1358,6 +1464,7 @@ class Home extends Component {
 											this.setState({
 												mouseX: e.clientX - 2,
 												mouseY: e.clientY - 4,
+												showMainMenu: true,
 												isType: "folder",
 												infos: item,
 											})
@@ -1406,6 +1513,7 @@ class Home extends Component {
 										this.setState({
 											mouseX: e.clientX - 2,
 											mouseY: e.clientY - 4,
+											showMainMenu: true,
 											idNote: item.idNote,
 											titleNote: item.title,
 											textNote: item.text,
@@ -1463,6 +1571,7 @@ class Home extends Component {
 											this.setState({
 												mouseX: e.clientX - 2,
 												mouseY: e.clientY - 4,
+												showMainMenu: true,
 												isType: "file",
 												infos: item,
 											}, () => this.clickFile(false))

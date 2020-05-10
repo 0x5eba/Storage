@@ -170,3 +170,13 @@ exports.saveNote = (req, res, next) => {
             res.status(403).send({ err: "Error modifying note" })
         })
 }
+
+exports.changeFolder = (req, res, next) => {
+    NoteController.changeFolder(req.body.idNote, req.body.parent)
+        .then((result) => {
+            res.status(201).send(result);
+        })
+        .catch(err => {
+            res.status(403).send({ err: "Error changing parent note" })
+        })
+}

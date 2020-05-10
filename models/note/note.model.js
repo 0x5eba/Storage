@@ -122,3 +122,12 @@ exports.saveNote = (owner, idNote, title, text) => {
 		})
 	})
 }
+
+exports.changeFolder = (idNote, parent) => {
+	return new Promise((resolve, reject) => {
+		Note.findOneAndUpdate({ idNote: idNote }, { $set: { parent: parent } }, {new: true}, function (err, folder) {
+			if (err) return reject(err)
+			resolve(folder)
+		})
+	})
+}

@@ -40,6 +40,13 @@ exports.routesConfig = function (app) {
         AuthController.proofToken,
         FileController.getFileSharedLink,
     ]);
+
+    app.patch('/api/file/changeFolder', [
+        AuthController.proofToken,
+        FileController.isOwner,
+        FolderController.checkIfFolderExist,
+        FileController.changeFolder,
+    ]);
 }
 
 const storage = new GridFsStorage({

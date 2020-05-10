@@ -162,3 +162,13 @@ exports.getFileSharedLink = (req, res, next) => {
             res.status(403).send({ err: "Error getting file" })
         })
 }
+
+exports.changeFolder = (req, res, next) => {
+    FileController.changeFolder(req.body.idFile, req.body.parent)
+        .then((result) => {
+            res.status(201).send(result);
+        })
+        .catch(err => {
+            res.status(403).send({ err: "Error changing parent file" })
+        })
+}

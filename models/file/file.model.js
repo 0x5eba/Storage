@@ -178,3 +178,12 @@ exports.getSharedFile = (link) => {
 		})
 	})
 }
+
+exports.changeFolder = (idFile, parent) => {
+	return new Promise((resolve, reject) => {
+		File.findOneAndUpdate({ idFile: idFile }, { $set: { parent: parent } }, {new: true}, function (err, folder) {
+			if (err) return reject(err)
+			resolve(folder)
+		})
+	})
+}

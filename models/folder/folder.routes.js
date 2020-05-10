@@ -1,13 +1,11 @@
 const FolderController = require('./folder.controller')
 const AuthController = require("../authorization/auth.js")
-const FileController = require('../file/file.controller')
 
 exports.routesConfig = function (app) {
 	app.post('/api/folder/createFolder', [
         AuthController.proofToken,
         FolderController.checkIfFolderExist,
         FolderController.createFolder,
-        FolderController.addFolderToParent,
     ]);
 
     app.post('/api/folder/getFolders', [

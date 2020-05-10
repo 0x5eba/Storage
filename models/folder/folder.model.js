@@ -6,7 +6,7 @@ const FolderModel = new mongoose.Schema({
     idFolder: { type: String, trim: true, default: "", require: true },
     owner: { type: String, trim: true, default: "", require: true }, // e' un token
 	parent: { type: String, trim: true, default: "", require: true }, // idFolder del parent
-	children: [{ type: String, trim: true, default: "" }], // idFolders dei figli
+	// children: [{ type: String, trim: true, default: "" }], // idFolders dei figli
 
     name: { type: String, trim: true, default: "", require: true }, // nome folder
     password: { type: String, trim: true, default: "" }, // se password !== '' allora devi passargli password per vederlo o essere l'owner
@@ -17,15 +17,6 @@ const FolderModel = new mongoose.Schema({
 
 const Folder = mongoose.model('Folder', FolderModel, 'Folder')
 
-
-exports.addFolderToParent = (parent, idFolder) => {
-	return new Promise((resolve, reject) => {
-		Folder.findOneAndUpdate({ idFolder: parent }, { $push: { children: idFolder } }, { new: true }, function (err, folder) {
-			if (err) return reject(err)
-			resolve(folder)
-		})
-	})
-}
 
 exports.saveFolder = (folderData) => {
 	return new Promise((resolve, reject) => {
@@ -118,3 +109,12 @@ exports.modify = (owner, idFolder, password, name, visibleToEveryone) => {
 		})
 	})
 }
+
+// exports.addFolderToParent = (parent, idFolder) => {
+// 	return new Promise((resolve, reject) => {
+// 		Folder.findOneAndUpdate({ idFolder: parent }, { $push: { children: idFolder } }, { new: true }, function (err, folder) {
+// 			if (err) return reject(err)
+// 			resolve(folder)
+// 		})
+// 	})
+// }
