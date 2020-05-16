@@ -355,6 +355,9 @@ class Home extends Component {
 						disableBottons: false,
                         folders: data,
                         passwords: newPasswords,
+					}, () => {
+						this.getFiles()
+						this.getNotes()
 					})
 				} else {
 					message.error(data.err)
@@ -540,7 +543,7 @@ class Home extends Component {
 			owner: this.state.owner,
 			token: this.state.token,
 			parent: this.getParent(),
-			password: this.state.password,
+			passwords: this.state.passwords,
 		}
 
 		this.setState({

@@ -204,7 +204,7 @@ exports.isOwner = (req, res, next) => {
         })
         .catch(err => {
             // print(err)
-            res.status(403).send({ err: "Error deleting folder" })
+            res.status(403).send({ err: "Error isOwner folder" })
         })
 }
 
@@ -234,7 +234,7 @@ exports.checkIfPasswordRequired = (req, res, next) => {
         })
         .catch(err => {
             // print(err)
-            res.status(403).send({ err: "Error deleting folder" })
+            res.status(403).send({ err: "Error check if password required folder" })
         })
 }
 
