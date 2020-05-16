@@ -140,6 +140,7 @@ exports.getFolders = (req, res, next) => {
         })
         .catch(err => {
             // print(err)
+            console.log(err)
             res.status(403).send({ err: "Error getting folder" })
         })
 }
@@ -220,7 +221,6 @@ exports.checkIfPasswordRequired = (req, res, next) => {
             } else if(result.password.length !== 0){
 
                 var passwords = req.body.passwords
-                console.log(passwords)
                 for(let a = 0; a < passwords.length; ++a){
                     if(bcrypt.compareSync(passwords[a], result.password)){
                         return next()

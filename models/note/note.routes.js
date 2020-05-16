@@ -11,6 +11,7 @@ exports.routesConfig = function (app) {
 
     app.post('/api/note/getNotes', [
         AuthController.proofToken,
+        FolderController.checkIfPasswordRequired,
         NoteController.getNotes
     ]);
 

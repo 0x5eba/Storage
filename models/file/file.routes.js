@@ -19,6 +19,7 @@ exports.routesConfig = function (app) {
 
     app.post('/api/file/getFiles', [
         AuthController.proofToken,
+        FolderController.checkIfPasswordRequired,
         FileController.getFiles
     ]);
 
@@ -31,6 +32,7 @@ exports.routesConfig = function (app) {
 
     app.post('/api/file/getFile', [
         AuthController.proofToken,
+        FolderController.checkIfPasswordRequired,
         FileController.getFile,
         FileController.checkPrivileges,
         FileController.getFileFormGridfs,

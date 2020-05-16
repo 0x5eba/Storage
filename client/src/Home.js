@@ -43,6 +43,7 @@ class Home extends Component {
 			visible: false,
 			showModal: false,
 			showModalPassword: false,
+			disableBottons: false,
 			showPassword: false,
 			folders: [],
 			files: [],
@@ -181,10 +182,12 @@ class Home extends Component {
                     if(data.passwordRequired === true){
                         this.openModalPassword()
                     } else {
-						console.log(data)
                         this.setState({
                             folders: data
-                        })
+                        }, () => {
+							this.getFiles()
+							this.getNotes()
+						})
                     }
 				} else {
 					console.error('Error:', data.err)
@@ -193,7 +196,16 @@ class Home extends Component {
 			.catch((error) => {
 				console.error('Error:', error)
 			})
+	}
 
+	getFiles = () => {
+		var data = {
+			parent: this.getParent(),
+			owner: this.state.owner,
+            token: this.state.token,
+            passwords: this.state.passwords,
+		}
+		
 		fetch("/api/file/getFiles", {
 			method: 'POST',
 			headers: {
@@ -215,8 +227,6 @@ class Home extends Component {
 			.catch((error) => {
 				console.error('Error:', error)
 			})
-
-		this.getNotes()
 	}
 
 	getNotes = () => {
@@ -224,7 +234,8 @@ class Home extends Component {
 			parent: this.getParent(),
 			owner: this.state.owner,
             token: this.state.token,
-		}
+            passwords: this.state.passwords,
+        }
 		
 		fetch("/api/note/getNotes", {
 			method: 'POST',
@@ -340,7 +351,8 @@ class Home extends Component {
                     window.sessionStorage.setItem("passwords", JSON.stringify(newPasswords))
 
 					this.setState({
-                        showModalPassword: false,
+						showModalPassword: false,
+						disableBottons: false,
                         folders: data,
                         passwords: newPasswords,
 					})
@@ -527,6 +539,8 @@ class Home extends Component {
 			idFile: this.state.infos.idFile,
 			owner: this.state.owner,
 			token: this.state.token,
+			parent: this.getParent(),
+			password: this.state.password,
 		}
 
 		this.setState({
@@ -607,6 +621,7 @@ class Home extends Component {
 		this.setState({
 			showModalPassword: true,
 			password: "",
+			disableBottons: true,
 		}, () => { })
 	}
 
@@ -1353,7 +1368,7 @@ class Home extends Component {
 									}
 								}}>
 									<Upload {...{
-										disabled: this.getParent() === "/" ? true : false,
+										disabled: (this.getParent() === "/" || this.state.disableBottons === true) ? true : false,
 										name: 'file',
 										action: '/api/file/uploadFile',
 										beforeUpload(file, fileList) {
@@ -1384,6 +1399,7 @@ class Home extends Component {
 										<Button
 											variant="contained"
 											className="buttons-folders"
+											disabled={this.state.disableBottons}
 											style={{
 												textAlign: "left",
 												justifyContent: "left",
@@ -1402,6 +1418,7 @@ class Home extends Component {
 								<Button
 									variant="contained"
 									className="buttons-folders"
+									disabled={this.state.disableBottons}
 									style={{
 										margin: "10px",
 										textAlign: "left",
@@ -1421,6 +1438,7 @@ class Home extends Component {
 								<Button
 									variant="contained"
 									className="buttons-folders"
+									disabled={this.state.disableBottons}
 									style={{
 										margin: "10px",
 										textAlign: "left",
