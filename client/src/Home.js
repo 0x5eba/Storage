@@ -903,10 +903,10 @@ class Home extends Component {
 	}
 
 	openModalCreateNote = () => {
-		// if(this.getParent() === "/"){
-		// 	message.error("Select or create a folder before creating note");
-		// 	return
-		// }
+		if(this.getParent() === "/"){
+			message.error("Select or create a folder before creating note");
+			return
+		}
 		this.setState({
 			showModalNote: true,
 			createNote: true,
