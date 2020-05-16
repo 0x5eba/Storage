@@ -1000,7 +1000,7 @@ class Home extends Component {
 						},
 					}}
 				>
-					{this.state.folders.map((item, index) => (
+					{this.state.folders.length > 0 && this.state.folders.map((item, index) => (
 						<MenuItem key={index} onClick={() => {
 							this.moveToFolder(item)
 							this.closeMenu()
@@ -1457,7 +1457,7 @@ class Home extends Component {
 					</div>
 					
 					<Row style={{ maxHeight: "230px", overflow: "auto", overflowY: "scroll", justifyContent: "center" }}>
-						{this.state.folders.filter(item => {
+						{this.state.folders.length > 0 && this.state.folders.filter(item => {
 							if(this.state.search.length > 0){
 								let re = new RegExp(this.state.search.toLowerCase(), "i")
 								return re.test(item.name.toLowerCase())
@@ -1509,7 +1509,7 @@ class Home extends Component {
 
 					<Row style={{ overflow: "auto", overflowY: "scroll", justifyContent: "center", height: "auto" }}>
 
-						{this.state.notes.filter(item => {
+						{this.state.notes.length > 0 && this.state.notes.filter(item => {
 							if(this.state.search.length > 0){
 								let re = new RegExp(this.state.search.toLowerCase(), "i")
 								return re.test(item.title.toLowerCase()) || re.test(item.text.toLowerCase())
@@ -1563,7 +1563,7 @@ class Home extends Component {
 						})}
 
 
-						{this.state.files.filter(item => {
+						{this.state.files.length > 0 && this.state.files.filter(item => {
 							if(this.state.search.length > 0){
 								let re = new RegExp(this.state.search.toLowerCase(), "i")
 								return re.test(item.name.toLowerCase())
