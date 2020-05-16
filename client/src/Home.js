@@ -83,14 +83,14 @@ class Home extends Component {
     }
     
     UNSAFE_componentWillMount = () => {
-        if(window.sessionStorage.getItem("passwords") === null) {
-            window.sessionStorage.setItem("passwords", JSON.stringify([]))
+        if(window.localStorage.getItem("passwords") === null) {
+            window.localStorage.setItem("passwords", JSON.stringify([]))
             this.setState({
 				passwords: [],
 			})
         } else {
             this.setState({
-				passwords: JSON.parse(window.sessionStorage.getItem("passwords")),
+				passwords: JSON.parse(window.localStorage.getItem("passwords")),
 			})
         }
 		if (window.localStorage.getItem("owner") !== null && window.localStorage.getItem("token") !== null) {
@@ -348,7 +348,7 @@ class Home extends Component {
 				if (data.err === undefined) {
                     
                     var newPasswords = [...this.state.passwords, this.state.password]
-                    window.sessionStorage.setItem("passwords", JSON.stringify(newPasswords))
+                    window.localStorage.setItem("passwords", JSON.stringify(newPasswords))
 
 					this.setState({
 						showModalPassword: false,
