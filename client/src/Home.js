@@ -5,6 +5,7 @@ import { UploadOutlined, FolderAddOutlined, FileAddOutlined } from '@ant-design/
 import 'antd/dist/antd.css';
 
 import { Button, TextField } from '@material-ui/core';
+import IconButton from '@material-ui/core/IconButton';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FolderIcon from '@material-ui/icons/Folder';
@@ -13,6 +14,7 @@ import FolderSharedIcon from '@material-ui/icons/FolderShared';
 import { Divider } from '@material-ui/core';
 import { TextareaAutosize } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
+import SettingsIcon from '@material-ui/icons/Settings';
 import InputAdornment from '@material-ui/core/InputAdornment';
 
 import Menu from '@material-ui/core/Menu';
@@ -74,6 +76,9 @@ class Home extends Component {
 			textNote: "",
 			idNote: "",
 			savingNote: false,
+
+			showModalAccount: false,
+			newToken: "",
 
 			isMobile: window.matchMedia("only screen and (max-width: 760px)").matches,
 		}
@@ -635,6 +640,7 @@ class Home extends Component {
 			showModalPassword: false,
 			showModalFile: false,
 			showModalNote: false,
+			showModalAccount: false,
 		}, () => { })
 	}
 
@@ -983,6 +989,30 @@ class Home extends Component {
 			})
 	}
 
+	saveNewToken = () => {
+		var token = this.state.newToken
+		if(token.length < 8){
+			message.error("Token must be at least 8 characters long")
+			return
+		}
+		this.sha256(token)
+			.then((proofToken) => {
+				this.setState({
+					owner: proofToken,
+					token: token,
+					newToken: "",
+				}, () => {
+					window.localStorage.setItem("owner", this.state.owner)
+					window.localStorage.setItem("token", this.state.token)
+				})
+
+				message.success("Secret token updated")
+			})
+			.catch((e) => {
+				console.log(e)
+			})
+	}
+
 	render() {
 		return (
 			<div>
@@ -1166,6 +1196,45 @@ class Home extends Component {
 					
 				</Menu>
 
+				{/* change account */}
+				<Modal show={this.state.showModalAccount} onHide={this.closeModal}
+					size="md"
+					aria-labelledby="contained-modal-title-vcenter"
+					centered>
+					<Modal.Header closeButton>
+						<Modal.Title id="contained-modal-title-vcenter" style={{ width: "100%" }}>
+							Settings
+						</Modal.Title>
+					</Modal.Header>
+					<Modal.Body style={{overflowY: "auto", wordBreak: "break-word", width: "100%", maxHeight: "calc(100vh - 200px)", minHeight: "400px"}}>
+						<div>
+							<h4>Your secret token:</h4>
+							<TextField
+								label="Secret token"
+								defaultValue={this.state.token}
+								InputProps={{readOnly: true}}
+								variant="filled"
+							/>
+
+							<h4 style={{paddingTop: "30px"}}>Change account:</h4>
+							<TextField
+								label="New secret token"
+								defaultValue=""
+								variant="outlined"
+								style={{width: "70%", marginTop: "5px"}}
+								onChange={(e) => this.setState({
+									newToken: e.target.value
+								})}
+							/>
+							<Button variant="contained" style={{
+								backgroundColor: "#4caf50",
+								marginTop: "15px", marginLeft: "10px"
+							}}
+								onClick={this.saveNewToken}>Save</Button>
+						</div>
+					</Modal.Body>
+				</Modal>
+
 				{/* create / modify note */}
 				<Modal show={this.state.showModalNote} onHide={this.closeNoteModal}
 					size="lg"
@@ -1220,8 +1289,6 @@ class Home extends Component {
 						}
 					</Modal.Footer>
 				</Modal>
-
-
 
                 {/* create file with name, password, visible */}
 				<Modal show={this.state.showModal} onHide={this.closeModal}
@@ -1354,12 +1421,22 @@ class Home extends Component {
 								),
 							}}
 							style={{
-								margin: "20px",
-								marginBottom: "0px",
+								marginTop: "20px",
 								maxWidth: "600px",
 								width: "80%",
+								paddingLeft: "0px",
 								backgroundColor: "white",
 							}} onChange={this.searchFilesAndFolders} />
+						
+						<IconButton onClick={() =>
+							this.setState({
+								showModalAccount: true,
+								newToken: "",
+							})}
+							style={{ marginTop: "20px", marginLeft: "5px" }}
+						>
+							<SettingsIcon className="icons"/>
+						</IconButton>
 					</div>
 
 					<div style={{ margin: "20px" }}>

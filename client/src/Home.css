@@ -63,3 +63,7 @@ body {
   width: 0px;
   background: transparent;
 }
+
+.ant-message {
+  z-index : 1500;
+}
