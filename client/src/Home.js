@@ -58,6 +58,8 @@ class Home extends Component {
 
 			url: null,
 			downloading: false,
+			viewFileClicked: false,
+			downloadFileClicked: false,
 			showModalFile: false,
 
 			mouseX: null,
@@ -142,7 +144,7 @@ class Home extends Component {
 	getFoldersAndFiles = () => {
 		var viewLink
 		if (this.state.path.includes("/file/")) {
-			viewLink = this.state.path.split('/file/')
+			viewLink = this.state.path.split('file/')
 			viewLink = viewLink[viewLink.length - 1]
 
 			this.setState({
@@ -483,6 +485,58 @@ class Home extends Component {
 			})
 	}
 
+	getSharedFileDownload = () => {
+		var data = {
+			link: this.state.viewLink,
+			owner: this.state.owner,
+			token: this.state.token,
+		}
+
+		this.setState({
+			downloading: true
+		})
+
+		fetch("/api/file/getSharedFileDownload", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.json())
+			.then(data => {
+				if (data.err === undefined) {
+					this.setState({
+						url: URL.createObjectURL(data),
+						downloading: false
+					}, () => {
+						var win = window.open(this.state.url, '_blank')
+						win.focus()
+
+						if (this.state.viewFileClicked === true) {
+							this.setState({
+								viewFileClicked: false
+							}, () => {
+								this.viewFile()
+							})
+						}
+						if (this.state.downloadFileClicked === true) {
+							this.setState({
+								downloadFileClicked: false
+							}, () => {
+								this.downloadFile()
+							})
+						}
+					})
+				} else {
+					console.error('Error:', data.err)
+				}
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
+	}
+
 	getShareLinkFile = () => {
 		var path = this.state.path.split("/")
         path.pop()
@@ -543,6 +597,15 @@ class Home extends Component {
 	}
 
 	clickFile = (showModel=true) => {
+
+		if (this.state.path.includes("/file/")) {
+			viewLink = this.state.path.split('file/')
+			viewLink = viewLink[viewLink.length - 1]
+
+			this.getSharedFileDownload()
+			return
+		}
+
 		var data = {
 			idFile: this.state.infos.idFile,
 			owner: this.state.owner,
@@ -575,17 +638,20 @@ class Home extends Component {
  						win.focus();
 					}
 
-					// if (this.state.viewFileClicked === true) {
-					// 	this.setState({
-					// 		viewFileClicked: false
-					// 	})
-					// 	this.viewFile()
-					// } else if (this.state.downloadFileClicked === true) {
-					// 	this.setState({
-					// 		downloadFileClicked: false
-					// 	})
-					// 	this.downloadFile()
-					// }
+					if (this.state.viewFileClicked === true) {
+						this.setState({
+							viewFileClicked: false
+						}, () => {
+							this.viewFile()
+						})
+					}
+					if (this.state.downloadFileClicked === true) {
+						this.setState({
+							downloadFileClicked: false
+						}, () => {
+							this.downloadFile()
+						})
+					}
 				})
 			})
 			.catch((error) => {
@@ -1059,7 +1125,7 @@ class Home extends Component {
 				>
 					{this.state.isType === "file" && 
 						<div style={{ width: "250px" }}>
-							{this.state.infos !== null && this.state.owner === this.state.infos.owner && 
+							{this.state.infos !== null && this.state.owner === this.state.infos.owner && this.state.path.includes("/file/") === false &&
 							<div>
 								<MenuItem onClick={() => {
 									this.remove()

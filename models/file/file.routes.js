@@ -43,6 +43,12 @@ exports.routesConfig = function (app) {
         FileController.getFileSharedLink,
     ]);
 
+    app.post('/api/file/getSharedFileDownload', [
+        AuthController.proofToken,
+        FileController.getSharedFileDownload,
+        FileController.getFileFormGridfs,
+    ]);
+
     app.patch('/api/file/changeFolder', [
         AuthController.proofToken,
         FileController.isOwner,

@@ -159,6 +159,21 @@ exports.getFileSharedLink = (req, res, next) => {
             res.status(201).send(result);
         })
         .catch(err => {
+            res.status(403).send({ err: "Error getting shared file" })
+        })
+}
+
+exports.getSharedFileDownload = (req, res, next) => {
+    FileController.getSharedFile(req.body.link)
+        .then((result) => {
+            if(result !== null){
+                req.body.idFile = result.idFile
+                return next()
+            } else {
+                res.status(403).send({ err: "Error getting shared file" })
+            }
+        })
+        .catch(err => {
             res.status(403).send({ err: "Error getting file" })
         })
 }
