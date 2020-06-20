@@ -503,7 +503,7 @@ class Home extends Component {
 			},
 			body: JSON.stringify(data),
 		})
-			.then(data => data.json())
+			.then(data => data.blob())
 			.then(data => {
 				if (data.err === undefined) {
 					this.setState({
