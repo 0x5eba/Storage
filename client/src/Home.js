@@ -485,7 +485,7 @@ class Home extends Component {
 			})
 	}
 
-	getSharedFileDownload = () => {
+	getSharedFileDownload = (showModel) => {
 		var data = {
 			link: this.state.viewLink,
 			owner: this.state.owner,
@@ -510,8 +510,10 @@ class Home extends Component {
 						url: URL.createObjectURL(data),
 						downloading: false
 					}, () => {
-						var win = window.open(this.state.url, '_blank')
-						win.focus()
+						if(showModel === true){
+							var win = window.open(this.state.url, '_blank')
+							win.focus()
+						}
 
 						if (this.state.viewFileClicked === true) {
 							this.setState({
@@ -599,7 +601,7 @@ class Home extends Component {
 	clickFile = (showModel=true) => {
 
 		if (this.state.path.includes("/file/")) {
-			return this.getSharedFileDownload()
+			return this.getSharedFileDownload(showModel)
 		}
 
 		var data = {
@@ -630,8 +632,8 @@ class Home extends Component {
 					downloading: false
 				}, () => {
 					if(showModel === true){
-						var win = window.open(this.state.url, '_blank');
- 						win.focus();
+						var win = window.open(this.state.url, '_blank')
+						win.focus()
 					}
 
 					if (this.state.viewFileClicked === true) {
