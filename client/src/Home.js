@@ -599,11 +599,7 @@ class Home extends Component {
 	clickFile = (showModel=true) => {
 
 		if (this.state.path.includes("/file/")) {
-			viewLink = this.state.path.split('file/')
-			viewLink = viewLink[viewLink.length - 1]
-
-			this.getSharedFileDownload()
-			return
+			return this.getSharedFileDownload()
 		}
 
 		var data = {
