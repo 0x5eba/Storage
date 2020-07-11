@@ -1389,18 +1389,21 @@ class Home extends Component {
 									})} />
 									: null}
 							</div>
-							<div>
-								<FormControlLabel
-									value="Visible to everyone"
-									checked={this.state.visible}
-									control={
-										<Checkbox color="primary" onClick={() => this.setState({
-											visible: !this.state.visible
-										})}
-										/>}
-									label="Visible to everyone"
-								/>
-							</div>
+							{this.getParent() !== "/" ?
+								<div>
+									<FormControlLabel
+										value="Visible to everyone"
+										checked={this.state.visible}
+										control={
+											<Checkbox color="primary" onClick={() => this.setState({
+												visible: !this.state.visible
+											})}
+											/>}
+										label="Visible to everyone"
+									/>
+								</div>
+								: null
+							}
 						</div>
 
 					</Modal.Body>
