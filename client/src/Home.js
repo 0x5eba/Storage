@@ -4,24 +4,22 @@ import { Upload, message, Input as InputAntd } from 'antd';
 import { UploadOutlined, FolderAddOutlined, FileAddOutlined } from '@ant-design/icons';
 import 'antd/dist/antd.css';
 
-import { Button, TextField } from '@material-ui/core';
-import IconButton from '@material-ui/core/IconButton';
+import {
+	Button, TextField, IconButton, Menu,
+	MenuItem, ListItemIcon, Typography,
+	FormControlLabel, Divider, TextareaAutosize,
+	InputAdornment
+} from '@material-ui/core';
 import Checkbox from '@material-ui/core/Checkbox';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FolderIcon from '@material-ui/icons/Folder';
 import LockIcon from '@material-ui/icons/Lock';
 import FolderSharedIcon from '@material-ui/icons/FolderShared';
-import { Divider } from '@material-ui/core';
-import { TextareaAutosize } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
 import SettingsIcon from '@material-ui/icons/Settings';
-import InputAdornment from '@material-ui/core/InputAdornment';
-
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import Typography from '@material-ui/core/Typography';
 import DraftsIcon from '@material-ui/icons/Drafts';
+import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@material-ui/icons/Delete';
+import ShareIcon from '@material-ui/icons/Share';
 
 import Modal from 'react-bootstrap/Modal';
 import { Row } from 'reactstrap';
@@ -51,7 +49,7 @@ class Home extends Component {
 			files: [],
 			notes: [],
 			search: "",
-            viewLink: null,
+			viewLink: null,
 			passwords: [],
 			modifyFolder: false,
 			isType: "",
@@ -87,19 +85,19 @@ class Home extends Component {
 
 		this.getFoldersAndFiles = this.getFoldersAndFiles.bind(this)
 		this.saveNote = this.saveNote.bind(this)
-    }
-    
-    UNSAFE_componentWillMount = () => {
-        if(window.localStorage.getItem("passwords") === null) {
-            window.localStorage.setItem("passwords", JSON.stringify([]))
-            this.setState({
+	}
+
+	UNSAFE_componentWillMount = () => {
+		if (window.localStorage.getItem("passwords") === null) {
+			window.localStorage.setItem("passwords", JSON.stringify([]))
+			this.setState({
 				passwords: [],
 			})
-        } else {
-            this.setState({
+		} else {
+			this.setState({
 				passwords: JSON.parse(window.localStorage.getItem("passwords")),
 			})
-        }
+		}
 		if (window.localStorage.getItem("owner") !== null && window.localStorage.getItem("token") !== null) {
 			this.setState({
 				owner: window.localStorage.getItem("owner"),
@@ -125,10 +123,10 @@ class Home extends Component {
 				})
 		}
 
-		if(window.localStorage.getItem("message1") === null){
-			if(this.getParent() === "/"){
+		if (window.localStorage.getItem("message1") === null) {
+			if (this.getParent() === "/") {
 				var msg = ""
-				if(this.state.isMobile === false){
+				if (this.state.isMobile === false) {
 					msg = "Right click on file/folder for more actions"
 				} else {
 					msg = "Long press on file/folder for more actions"
@@ -138,7 +136,7 @@ class Home extends Component {
 
 			window.localStorage.setItem("message1", "true")
 		}
-		
+
 	}
 
 	getFoldersAndFiles = () => {
@@ -172,9 +170,9 @@ class Home extends Component {
 		var data = {
 			parent: this.getParent(),
 			owner: this.state.owner,
-            token: this.state.token,
-            passwords: this.state.passwords,
-        }
+			token: this.state.token,
+			passwords: this.state.passwords,
+		}
 
 		fetch("/api/folder/getFolders", {
 			method: 'POST',
@@ -186,16 +184,16 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-                    if(data.passwordRequired === true){
-                        this.openModalPassword()
-                    } else {
-                        this.setState({
-                            folders: data
-                        }, () => {
+					if (data.passwordRequired === true) {
+						this.openModalPassword()
+					} else {
+						this.setState({
+							folders: data
+						}, () => {
 							this.getFiles()
 							this.getNotes()
 						})
-                    }
+					}
 				} else {
 					console.error('Error:', data.err)
 				}
@@ -209,10 +207,10 @@ class Home extends Component {
 		var data = {
 			parent: this.getParent(),
 			owner: this.state.owner,
-            token: this.state.token,
-            passwords: this.state.passwords,
+			token: this.state.token,
+			passwords: this.state.passwords,
 		}
-		
+
 		fetch("/api/file/getFiles", {
 			method: 'POST',
 			headers: {
@@ -223,7 +221,6 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-					console.log(data)
 					this.setState({
 						files: data
 					})
@@ -240,10 +237,10 @@ class Home extends Component {
 		var data = {
 			parent: this.getParent(),
 			owner: this.state.owner,
-            token: this.state.token,
-            passwords: this.state.passwords,
-        }
-		
+			token: this.state.token,
+			passwords: this.state.passwords,
+		}
+
 		fetch("/api/note/getNotes", {
 			method: 'POST',
 			headers: {
@@ -254,7 +251,6 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-					console.log(data)
 					this.setState({
 						notes: data
 					})
@@ -283,25 +279,25 @@ class Home extends Component {
 			b[i] = a[j]
 		}
 		return b.join("")
-    }
-    
-    getParent = () => {
-        var parent = this.state.path.split("/")
-        parent = parent[parent.length-1]
+	}
 
-        if(parent.length === 0){
-            parent = "/"
-        }
+	getParent = () => {
+		var parent = this.state.path.split("/")
+		parent = parent[parent.length - 1]
 
-        return parent
-    }
+		if (parent.length === 0) {
+			parent = "/"
+		}
+
+		return parent
+	}
 
 	createFolder = () => {
 		if (this.state.name.length === 0) {
 			message.error(`Insert a name please\n`);
 			return
-        }
-        
+		}
+
 		var data = {
 			owner: this.state.owner,
 			token: this.state.token,
@@ -336,11 +332,11 @@ class Home extends Component {
 	}
 
 	accessFolder = () => {
-        var data = {
-            owner: this.state.owner,
-            token: this.state.token,
-            idFolder: this.getParent(),
-            parent: this.getParent(),
+		var data = {
+			owner: this.state.owner,
+			token: this.state.token,
+			idFolder: this.getParent(),
+			parent: this.getParent(),
 			password: this.state.password,
 		}
 		fetch("/api/folder/getFolderWithPassword", {
@@ -353,15 +349,15 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-                    
-                    var newPasswords = [...this.state.passwords, this.state.password]
-                    window.localStorage.setItem("passwords", JSON.stringify(newPasswords))
+
+					var newPasswords = [...this.state.passwords, this.state.password]
+					window.localStorage.setItem("passwords", JSON.stringify(newPasswords))
 
 					this.setState({
 						showModalPassword: false,
 						disableBottons: false,
-                        folders: data,
-                        passwords: newPasswords,
+						folders: data,
+						passwords: newPasswords,
 					}, () => {
 						this.getFiles()
 						this.getNotes()
@@ -373,16 +369,23 @@ class Home extends Component {
 			.catch((error) => {
 				console.error('Error:', error)
 			})
-    }
-    
-    getShareLinkFolder = () => {
-        var path = this.state.path.split("/")
-        path.pop()
-        path = path.join("/") + "/"
+	}
 
-        var text = path + this.state.infos.idFolder
+	getShareLink = (type) => {
+		var path = this.state.path.split("/")
+		path.pop()
+		path = path.join("/") + "/"
 
-        if (!navigator.clipboard) {
+		var text = ""
+		if (type === "folder") {
+			text = path + this.state.infos.idFolder
+		} else if (type === "file") {
+			text = path + "file/" + this.state.infos.linkView
+		} else if (type === "note") {
+			text = path + "note/" + this.state.infos.linkView
+		}
+
+		if (!navigator.clipboard) {
 			var textArea = document.createElement("textarea")
 			textArea.value = text
 			document.body.appendChild(textArea)
@@ -390,9 +393,11 @@ class Home extends Component {
 			textArea.select()
 			try {
 				var successful = document.execCommand('copy');
-				var msg = successful ? 'successful' : 'unsuccessful';
-				console.log(msg)
-				message.success("Link copied to clipboard!")
+				if (successful) {
+					message.success("Link copied to clipboard!")
+				} else {
+					message.error("Failed to copy")
+				}
 			} catch (err) {
 				message.error("Failed to copy")
 			}
@@ -403,15 +408,15 @@ class Home extends Component {
 			message.success("Link copied to clipboard!")
 		}, function (err) {
 			message.error("Failed to copy")
-        })
+		})
 	}
 
 	modifyFolder = () => {
 		if (this.state.name.length === 0) {
 			message.error(`Insert a name please\n`);
 			return
-        }
-        
+		}
+
 		var data = {
 			owner: this.state.owner,
 			token: this.state.token,
@@ -429,7 +434,6 @@ class Home extends Component {
 		})
 			.then(data => data.json())
 			.then(data => {
-				console.log(data)
 				if (data.err === undefined) {
 					this.getFoldersAndFiles()
 
@@ -446,13 +450,13 @@ class Home extends Component {
 				console.error('Error:', error)
 			})
 	}
-	
+
 	searchFilesAndFolders = (e) => {
 		this.setState({
 			search: e.target.value
 		}, () => {
 
-			
+
 		})
 	}
 
@@ -510,7 +514,7 @@ class Home extends Component {
 						url: URL.createObjectURL(data),
 						downloading: false
 					}, () => {
-						if(showModel === true){
+						if (showModel === true) {
 							var win = window.open(this.state.url, '_blank')
 							win.focus()
 						}
@@ -537,37 +541,6 @@ class Home extends Component {
 			.catch((error) => {
 				console.error('Error:', error)
 			})
-	}
-
-	getShareLinkFile = () => {
-		var path = this.state.path.split("/")
-        path.pop()
-        path = path.join("/") + "/"
-
-        var text = path + "file/" + this.state.infos.linkView
-
-		if (!navigator.clipboard) {
-			var textArea = document.createElement("textarea")
-			textArea.value = text
-			document.body.appendChild(textArea)
-			textArea.focus()
-			textArea.select()
-			try {
-				var successful = document.execCommand('copy');
-				var msg = successful ? 'successful' : 'unsuccessful';
-				console.log(msg)
-				message.success("Link copied to clipboard!")
-			} catch (err) {
-				message.error("Failed to copy")
-			}
-			document.body.removeChild(textArea)
-			return
-		}
-		navigator.clipboard.writeText(text).then(function () {
-			message.success("Link copied to clipboard!")
-		}, function (err) {
-			message.error("Failed to copy")
-		})
 	}
 
 	downloadFile = () => {
@@ -598,7 +571,7 @@ class Home extends Component {
 		window.location.href = "/" + this.state.infos.idFolder
 	}
 
-	clickFile = (showModel=true) => {
+	clickFile = (showModel = true) => {
 
 		if (this.state.path.includes("/file/")) {
 			return this.getSharedFileDownload(showModel)
@@ -631,7 +604,7 @@ class Home extends Component {
 					url: URL.createObjectURL(data),
 					downloading: false
 				}, () => {
-					if(showModel === true){
+					if (showModel === true) {
 						var win = window.open(this.state.url, '_blank')
 						win.focus()
 					}
@@ -667,8 +640,8 @@ class Home extends Component {
 		}
 	}
 
-	openModal = (modifyFolder=false) => {
-		if(modifyFolder === true){
+	openModal = (modifyFolder = false) => {
+		if (modifyFolder === true) {
 			this.setState({
 				showModal: true,
 				modifyFolder: modifyFolder,
@@ -721,14 +694,14 @@ class Home extends Component {
 		var data = {}
 		var url = ""
 
-		if(this.state.isType === "file"){
+		if (this.state.isType === "file") {
 			data = {
 				idFile: this.state.infos.idFile,
 				owner: this.state.owner,
 				token: this.state.token,
 			}
 			url = "/api/file/deleteFile"
-		} else if(this.state.isType === "folder") {
+		} else if (this.state.isType === "folder") {
 			data = {
 				idFolder: this.state.infos.idFolder,
 				owner: this.state.owner,
@@ -791,8 +764,8 @@ class Home extends Component {
 			'application/zip': 'far fa-file-archive',
 		}
 
-		for(let k in icon_classes){
-			if(mime_type.indexOf(k) === 0){
+		for (let k in icon_classes) {
+			if (mime_type.indexOf(k) === 0) {
 				return icon_classes[k]
 			}
 		}
@@ -871,37 +844,6 @@ class Home extends Component {
 			})
 	}
 
-	getShareLinkNote = () => {
-		var path = this.state.path.split("/")
-        path.pop()
-        path = path.join("/") + "/"
-
-        var text = path + "note/" + this.state.infos.linkView
-
-		if (!navigator.clipboard) {
-			var textArea = document.createElement("textarea")
-			textArea.value = text
-			document.body.appendChild(textArea)
-			textArea.focus()
-			textArea.select()
-			try {
-				var successful = document.execCommand('copy');
-				var msg = successful ? 'successful' : 'unsuccessful';
-				console.log(msg)
-				message.success("Link copied to clipboard!")
-			} catch (err) {
-				message.error("Failed to copy")
-			}
-			document.body.removeChild(textArea)
-			return
-		}
-		navigator.clipboard.writeText(text).then(function () {
-			message.success("Link copied to clipboard!")
-		}, function (err) {
-			message.error("Failed to copy")
-		})
-	}
-
 	createNote = () => {
 		var data = {
 			title: this.state.titleNote,
@@ -934,7 +876,7 @@ class Home extends Component {
 	}
 
 	preventDuplicate = (e) => {
-		if(this.state.createNote === true){
+		if (this.state.createNote === true) {
 			this.setState({
 				[e.target.name]: e.target.value,
 				createNote: false,
@@ -949,15 +891,15 @@ class Home extends Component {
 			clearTimeout(timerId);
 		}
 
-		if(this.state.createNote === true){
+		if (this.state.createNote === true) {
 			// create note
-			setTimeout(this.preventDuplicate(e), Math.random()*1000 + Math.random()*500);
+			setTimeout(this.preventDuplicate(e), Math.random() * 1000 + Math.random() * 500);
 		} else {
 			// simple update
 			this.setState({
 				[e.target.name]: e.target.value,
 			}, () => {
-				if(this.state.idNote !== ""){
+				if (this.state.idNote !== "") {
 					timerId = setTimeout(() => {
 						this.saveNote()
 					}, 400)
@@ -973,7 +915,7 @@ class Home extends Component {
 	}
 
 	openModalCreateNote = () => {
-		if(this.getParent() === "/"){
+		if (this.getParent() === "/") {
 			message.error("Select or create a folder before creating note");
 			return
 		}
@@ -998,7 +940,7 @@ class Home extends Component {
 	closeNoteModal = () => {
 		this.setState({
 			showModalNote: false,
-		}, () => { 
+		}, () => {
 			this.getNotes()
 		})
 	}
@@ -1014,7 +956,7 @@ class Home extends Component {
 		var data = {}
 		var url = ""
 
-		if(this.state.isType === "file"){
+		if (this.state.isType === "file") {
 			data = {
 				idFile: this.state.infos.idFile,
 				owner: this.state.owner,
@@ -1055,7 +997,7 @@ class Home extends Component {
 
 	saveNewToken = () => {
 		var token = this.state.newToken
-		if(token.length < 8){
+		if (token.length < 8) {
 			message.error("Token must be at least 8 characters long")
 			return
 		}
@@ -1075,6 +1017,59 @@ class Home extends Component {
 			.catch((e) => {
 				console.log(e)
 			})
+	}
+
+	// some magic to add space as it should be
+	parseMarkdown(data) {
+		data = data.split("\n")
+		var newData = []
+		var start = false
+		for (let a = 0; a < data.length; ++a) {
+			if (data[a].length === 0) {
+				if (start === false) {
+					continue
+				}
+				if (["*", "-", "+"].includes(data[a - 1].trim()[0]) === true ||
+					["*", "-", "+"].includes(data[a + 1].trim()[0]) === true ||
+					(a !== data.length - 1 && data[a + 1].trim().split(". ").length >= 2 && isNaN(parseInt(data[a + 1].trim().split(". ")[0])) === false)) {
+					newData.push("")
+					continue
+				}
+				newData.push("\\")
+				newData.push("\\")
+			} else {
+				start = true
+
+				var check_number_list = data[a].trim().split(". ")
+
+				if (check_number_list.length >= 2 && isNaN(parseInt(check_number_list[0])) === false) {
+					newData.push(data[a])
+					/*
+					check cases like:
+						1. asd
+						2. asd
+						text. a	
+					*/
+					if (a !== data.length - 1) {
+						var check_number_list_next = data[a + 1].trim().split(". ")
+						if (check_number_list_next.length < 2 ||
+							(check_number_list_next.length >= 2 && isNaN(parseInt(check_number_list_next[0])))) {
+							newData.push("")
+						}
+					}
+					continue
+				}
+
+				if (a !== data.length - 1 && data[a + 1].length > 0 &&
+					["*", "-", "+"].includes(data[a + 1].trim()[0]) === false &&
+					(data[a + 1].trim().split(". ").length < 2 || (data[a + 1].trim().split(". ").length >= 2 && isNaN(parseInt(data[a + 1].trim().split(". ")[0]))))) {
+					newData.push(data[a] + "\\")
+				} else {
+					newData.push(data[a])
+				}
+			}
+		}
+		return newData.join("\n")
 	}
 
 	render() {
@@ -1109,7 +1104,7 @@ class Home extends Component {
 					))}
 				</Menu>
 
-                {/* right click folder / file */}
+				{/* right click folder / file */}
 				<Menu
 					keepMounted
 					open={this.state.showMainMenu === true}
@@ -1121,33 +1116,33 @@ class Home extends Component {
 							: undefined
 					}
 				>
-					{this.state.isType === "file" && 
+					{this.state.isType === "file" &&
 						<div style={{ width: "250px" }}>
 							{this.state.infos !== null && this.state.owner === this.state.infos.owner && this.state.path.includes("/file/") === false &&
-							<div>
-								<MenuItem onClick={() => {
-									this.remove()
-									this.closeMenu()
-								}}>
-									<ListItemIcon>
-										<DraftsIcon fontSize="small" />
-									</ListItemIcon>
-									<Typography variant="inherit" noWrap>
-										Remove
+								<div>
+									<MenuItem onClick={() => {
+										this.remove()
+										this.closeMenu()
+									}}>
+										<ListItemIcon>
+											<DraftsIcon fontSize="small" />
+										</ListItemIcon>
+										<Typography variant="inherit" noWrap>
+											Remove
 									</Typography>
-								</MenuItem>
+									</MenuItem>
 
-								<MenuItem onClick={() => {
-									this.openFoldersMenu()
-								}}>
-									<ListItemIcon>
-										<DraftsIcon fontSize="small" />
-									</ListItemIcon>
-									<Typography variant="inherit" noWrap>
-										Move to Folder
+									<MenuItem onClick={() => {
+										this.openFoldersMenu()
+									}}>
+										<ListItemIcon>
+											<DraftsIcon fontSize="small" />
+										</ListItemIcon>
+										<Typography variant="inherit" noWrap>
+											Move to Folder
 									</Typography>
-								</MenuItem>
-							</div>
+									</MenuItem>
+								</div>
 							}
 
 							<MenuItem onClick={() => {
@@ -1163,7 +1158,7 @@ class Home extends Component {
 							</MenuItem>
 
 							<MenuItem onClick={() => {
-								this.getShareLinkFile()
+								this.getShareLink("file")
 								this.closeMenu()
 							}}>
 								<ListItemIcon>
@@ -1175,23 +1170,23 @@ class Home extends Component {
 							</MenuItem>
 						</div>}
 
-					{this.state.isType === "folder" && 
+					{this.state.isType === "folder" &&
 						<div style={{ width: "250px" }}>
-							{this.state.infos !== null && this.state.owner === this.state.infos.owner && 
-							<MenuItem onClick={() => {
-								this.remove()
-								this.closeMenu()
-							}}>
-								<ListItemIcon>
-									<DraftsIcon fontSize="small" />
-								</ListItemIcon>
-								<Typography variant="inherit" noWrap>
-									Remove
+							{this.state.infos !== null && this.state.owner === this.state.infos.owner &&
+								<MenuItem onClick={() => {
+									this.remove()
+									this.closeMenu()
+								}}>
+									<ListItemIcon>
+										<DraftsIcon fontSize="small" />
+									</ListItemIcon>
+									<Typography variant="inherit" noWrap>
+										Remove
 								</Typography>
-							</MenuItem>}
+								</MenuItem>}
 
-                            <MenuItem onClick={() => {
-								this.getShareLinkFolder()
+							<MenuItem onClick={() => {
+								this.getShareLink("folder")
 								this.closeMenu()
 							}}>
 								<ListItemIcon>
@@ -1202,7 +1197,7 @@ class Home extends Component {
 								</Typography>
 							</MenuItem>
 
-							{this.state.infos !== null && this.state.owner === this.state.infos.owner && 
+							{this.state.infos !== null && this.state.owner === this.state.infos.owner &&
 								<MenuItem onClick={() => {
 									this.openModal(true)
 									this.closeMenu()
@@ -1216,37 +1211,37 @@ class Home extends Component {
 								</MenuItem>}
 						</div>}
 
-					{this.state.isType === "note" && 
+					{this.state.isType === "note" &&
 						<div style={{ width: "250px" }}>
-							{this.state.infos !== null && this.state.owner === this.state.infos.owner && 
-							<div>
-								<MenuItem onClick={() => {
-									this.remove()
-									this.closeMenu()
-								}}>
-									<ListItemIcon>
-										<DraftsIcon fontSize="small" />
-									</ListItemIcon>
-									<Typography variant="inherit" noWrap>
-										Remove
+							{this.state.infos !== null && this.state.owner === this.state.infos.owner &&
+								<div>
+									<MenuItem onClick={() => {
+										this.remove()
+										this.closeMenu()
+									}}>
+										<ListItemIcon>
+											<DraftsIcon fontSize="small" />
+										</ListItemIcon>
+										<Typography variant="inherit" noWrap>
+											Remove
 									</Typography>
-								</MenuItem>
+									</MenuItem>
 
-								<MenuItem onClick={() => {
-									this.openFoldersMenu()
-								}}>
-									<ListItemIcon>
-										<DraftsIcon fontSize="small" />
-									</ListItemIcon>
-									<Typography variant="inherit" noWrap>
-										Move to Folder
+									<MenuItem onClick={() => {
+										this.openFoldersMenu()
+									}}>
+										<ListItemIcon>
+											<DraftsIcon fontSize="small" />
+										</ListItemIcon>
+										<Typography variant="inherit" noWrap>
+											Move to Folder
 									</Typography>
-								</MenuItem>
-							</div>
+									</MenuItem>
+								</div>
 							}
 
-                            <MenuItem onClick={() => {
-								this.getShareLinkNote()
+							<MenuItem onClick={() => {
+								this.getShareLink("note")
 								this.closeMenu()
 							}}>
 								<ListItemIcon>
@@ -1257,7 +1252,7 @@ class Home extends Component {
 								</Typography>
 							</MenuItem>
 						</div>}
-					
+
 				</Menu>
 
 				{/* change account */}
@@ -1270,22 +1265,22 @@ class Home extends Component {
 							Settings
 						</Modal.Title>
 					</Modal.Header>
-					<Modal.Body style={{overflowY: "auto", wordBreak: "break-word", width: "100%", maxHeight: "calc(100vh - 200px)", minHeight: "400px"}}>
+					<Modal.Body style={{ overflowY: "auto", wordBreak: "break-word", width: "100%", maxHeight: "calc(100vh - 200px)", minHeight: "400px" }}>
 						<div>
 							<h4>Your secret token:</h4>
 							<TextField
 								label="Secret token"
 								defaultValue={this.state.token}
-								InputProps={{readOnly: true}}
+								InputProps={{ readOnly: true }}
 								variant="filled"
 							/>
 
-							<h4 style={{paddingTop: "30px"}}>Change account:</h4>
+							<h4 style={{ paddingTop: "30px" }}>Change account:</h4>
 							<TextField
 								label="New secret token"
 								defaultValue=""
 								variant="outlined"
-								style={{width: "70%", marginTop: "5px"}}
+								style={{ width: "70%", marginTop: "5px" }}
 								onChange={(e) => this.setState({
 									newToken: e.target.value
 								})}
@@ -1307,54 +1302,60 @@ class Home extends Component {
 					<Modal.Header closeButton>
 						<Modal.Title id="contained-modal-title-vcenter" style={{ width: "100%" }}>
 							{this.state.edit === false ?
-							this.state.titleNote
-							:
-							<TextareaAutosize rowsMax={1} placeholder="Title" value={this.state.titleNote} name="titleNote" onChange={this.handleInputNote} autoFocus
-								style={{width: "100%", borderRadius: "6px", border: "none", 
-								borderColor: "Transparent", overflow: "auto", outline: "none", resize: "none", 
-								margin: "0px"}} />
+								this.state.titleNote
+								:
+								<TextareaAutosize rowsMax={1} placeholder="Title" value={this.state.titleNote} name="titleNote" onChange={this.handleInputNote} autoFocus
+									style={{
+										width: "100%", borderRadius: "6px", border: "none",
+										borderColor: "Transparent", overflow: "auto", outline: "none", resize: "none",
+										margin: "0px"
+									}} />
 							}
 						</Modal.Title>
 					</Modal.Header>
-					<Modal.Body style={{overflowY: "auto", wordBreak: "break-word", width: "100%", maxHeight: "calc(100vh - 200px)", minHeight: "400px"}}>
+					<Modal.Body style={{ overflowY: "auto", wordBreak: "break-word", width: "100%", maxHeight: "calc(100vh - 200px)", minHeight: "400px" }}>
 						<div>
 							{this.state.edit === false ?
-							<Note text={this.state.textNote} style={{width: "100%", minHeight: "100%", borderRadius: "6px", border: "none", 
-							borderColor: "Transparent", overflow: "auto", outline: "none", resize: "none", 
-							margin: "0px", fontSize: "14px"}}></Note>
-							:
-							<div>
-								<TextareaAutosize placeholder="Write a note in markdown..." value={this.state.textNote} name="textNote" onChange={this.handleInputNote}
-								style={{width: "100%", minHeight: "100%", borderRadius: "6px", border: "none", 
-								borderColor: "Transparent", overflow: "auto", outline: "none", resize: "none", 
-								margin: "0px", fontSize: "14px"}} />
-							</div>
+								<Note text={this.parseMarkdown(this.state.textNote)} style={{
+									width: "100%", minHeight: "100%", borderRadius: "6px", border: "none",
+									borderColor: "Transparent", overflow: "auto", outline: "none", resize: "none",
+									margin: "0px", fontSize: "14px"
+								}}></Note>
+								:
+								<div>
+									<TextareaAutosize placeholder="Write a note in markdown..." value={this.state.textNote} name="textNote" onChange={this.handleInputNote}
+										style={{
+											width: "100%", minHeight: "100%", borderRadius: "6px", border: "none",
+											borderColor: "Transparent", overflow: "auto", outline: "none", resize: "none",
+											margin: "0px", fontSize: "14px"
+										}} />
+								</div>
 							}
 						</div>
 					</Modal.Body>
 					<Modal.Footer>
 						{this.state.edit === false ?
-						this.state.infos !== null && this.state.owner === this.state.infos.owner && 
-						<Button variant="contained" style={{
-							backgroundColor: "#2196f3",
-							marginLeft: "20px",
-							marginRight: "20px"
-						}} onClick={this.editText}>Edit</Button>
-						:
-						<Row>
-							<div>{this.state.savingNote === false ? "Saved!" : "Saving..."}</div>
+							this.state.infos !== null && this.state.owner === this.state.infos.owner &&
 							<Button variant="contained" style={{
-								backgroundColor: "#4caf50",
+								backgroundColor: "#2196f3",
 								marginLeft: "20px",
 								marginRight: "20px"
-							}} onClick={this.previewText}>Preview</Button>
-						</Row>
-						
+							}} onClick={this.editText}>Edit</Button>
+							:
+							<Row>
+								<div>{this.state.savingNote === false ? "Saved!" : "Saving..."}</div>
+								<Button variant="contained" style={{
+									backgroundColor: "#4caf50",
+									marginLeft: "20px",
+									marginRight: "20px"
+								}} onClick={this.previewText}>Preview</Button>
+							</Row>
+
 						}
 					</Modal.Footer>
 				</Modal>
 
-                {/* create file with name, password, visible */}
+				{/* create file with name, password, visible */}
 				<Modal show={this.state.showModal} onHide={this.closeModal}
 					size="md"
 					aria-labelledby="contained-modal-title-vcenter"
@@ -1362,7 +1363,7 @@ class Home extends Component {
 					<Modal.Header closeButton>
 						<Modal.Title id="contained-modal-title-vcenter">
 							{this.state.modifyFolder === true ? "Modify Folder" : "New Folder"}
-					</Modal.Title>
+						</Modal.Title>
 					</Modal.Header>
 					<Modal.Body>
 						<div style={{ paddingLeft: "30px", paddingRight: "30px" }}>
@@ -1373,7 +1374,7 @@ class Home extends Component {
 							</div>
 							<div>
 								<FormControlLabel
-								 	checked={this.state.showPassword}
+									checked={this.state.showPassword}
 									value="password"
 									control={
 										<Checkbox color="primary" onClick={() => this.setState({
@@ -1383,10 +1384,10 @@ class Home extends Component {
 									label="Password"
 								/>
 								{this.state.showPassword === true ?
-									<InputAntd  defaultValue={this.state.password} placeholder="Password" 
+									<InputAntd defaultValue={this.state.password} placeholder="Password"
 										type="password" onChange={(e) => this.setState({
-										password: e.target.value
-									})} />
+											password: e.target.value
+										})} />
 									: null}
 							</div>
 							{this.getParent() !== "/" ?
@@ -1409,26 +1410,26 @@ class Home extends Component {
 					</Modal.Body>
 					<Modal.Footer>
 						<Button variant="contained" style={{ backgroundColor: "white" }} onClick={this.closeModal} >Cancel</Button>
-						{this.state.modifyFolder === true ? 
-						<Button variant="contained" style={{
-							backgroundColor: "#4caf50",
-							marginLeft: "20px",
-							marginRight: "20px"
-						}}
-							onClick={this.modifyFolder}>Save</Button>
-						:
-						<Button variant="contained" style={{
-							backgroundColor: "#4caf50",
-							marginLeft: "20px",
-							marginRight: "20px"
-						}}
-							onClick={this.createFolder}>Create</Button>
+						{this.state.modifyFolder === true ?
+							<Button variant="contained" style={{
+								backgroundColor: "#4caf50",
+								marginLeft: "20px",
+								marginRight: "20px"
+							}}
+								onClick={this.modifyFolder}>Save</Button>
+							:
+							<Button variant="contained" style={{
+								backgroundColor: "#4caf50",
+								marginLeft: "20px",
+								marginRight: "20px"
+							}}
+								onClick={this.createFolder}>Create</Button>
 						}
-						
+
 					</Modal.Footer>
 				</Modal>
-                
-                {/* ask for password */}
+
+				{/* ask for password */}
 				<Modal show={this.state.showModalPassword} onHide={this.closeModal}
 					size="md"
 					aria-labelledby="contained-modal-title-vcenter"
@@ -1455,7 +1456,7 @@ class Home extends Component {
 							onClick={this.accessFolder}>Access</Button>
 					</Modal.Footer>
 				</Modal>
-				
+
 				{/* show view or download on click file */}
 				<Modal show={this.state.showModalFile} onHide={this.closeModal}
 					size="md"
@@ -1482,9 +1483,9 @@ class Home extends Component {
 						<TextField label="Search" type="search" variant="outlined"
 							InputProps={{
 								endAdornment: (
-								<InputAdornment position="end">
-									<SearchIcon />
-								</InputAdornment>
+									<InputAdornment position="end">
+										<SearchIcon />
+									</InputAdornment>
 								),
 							}}
 							style={{
@@ -1494,7 +1495,7 @@ class Home extends Component {
 								paddingLeft: "0px",
 								backgroundColor: "white",
 							}} onChange={this.searchFilesAndFolders} />
-						
+
 						<IconButton onClick={() =>
 							this.setState({
 								showModalAccount: true,
@@ -1502,15 +1503,15 @@ class Home extends Component {
 							})}
 							style={{ marginTop: "20px", marginLeft: "5px" }}
 						>
-							<SettingsIcon className="icons"/>
+							<SettingsIcon className="icons" />
 						</IconButton>
 					</div>
 
 					<div style={{ margin: "20px" }}>
-						<Row style={{justifyContent: "center"}}>
+						<Row style={{ justifyContent: "center" }}>
 							<div>
 								<div style={{ margin: "10px" }} onClick={() => {
-									if(this.getParent() === "/"){
+									if (this.getParent() === "/") {
 										message.error("Select or create a folder before uploading files");
 									}
 								}}>
@@ -1529,7 +1530,7 @@ class Home extends Component {
 											}
 
 											hide = message.loading('Uploading..', 0)
-											
+
 											return true
 										},
 										data: {
@@ -1542,7 +1543,7 @@ class Home extends Component {
 										showUploadList: false,
 										onChange: this.showMessageUploadFile
 									}}>
-									
+
 										<Button
 											variant="contained"
 											className="buttons-folders"
@@ -1602,10 +1603,10 @@ class Home extends Component {
 							</div>
 						</Row>
 					</div>
-					
+
 					<Row style={{ maxHeight: "230px", overflow: "auto", overflowY: "scroll", justifyContent: "center" }}>
 						{this.state.folders.length > 0 && this.state.folders.filter(item => {
-							if(this.state.search.length > 0){
+							if (this.state.search.length > 0) {
 								let re = new RegExp(this.state.search.toLowerCase(), "i")
 								return re.test(item.name.toLowerCase())
 							} else {
@@ -1657,7 +1658,7 @@ class Home extends Component {
 					<Row style={{ overflow: "auto", overflowY: "scroll", justifyContent: "center", height: "auto" }}>
 
 						{this.state.notes.length > 0 && this.state.notes.filter(item => {
-							if(this.state.search.length > 0){
+							if (this.state.search.length > 0) {
 								let re = new RegExp(this.state.search.toLowerCase(), "i")
 								return re.test(item.title.toLowerCase()) || re.test(item.text.toLowerCase())
 							} else {
@@ -1665,53 +1666,99 @@ class Home extends Component {
 							}
 						}).map((item) => {
 							return (
-								<div key={item._id} props={item}
-									variant="contained"
-									style={{
-										width: "250px", height: "250px", margin: "15px", padding: "15px", paddingTop: "10px",
-										textTransform: 'none', backgroundColor: "white", textAlign: "left",
-										justifyContent: "left", fontSize: "17px", borderRadius: "10px", 
-										display: "inline-block",  whiteSpace: "nowrap", textOverflow: "ellipsis", overflowY: "scroll", 
-									}}
-									onContextMenu={(e) => {
-										e.preventDefault()
-										this.setState({
-											mouseX: e.clientX - 2,
-											mouseY: e.clientY - 4,
-											showMainMenu: true,
-											idNote: item.idNote,
-											titleNote: item.title,
-											textNote: item.text,
-											infos: item,
-											isType: "note",
-										})
-									}}
-									onClick={() => {
-										this.setState({
-											idNote: item.idNote,
-											titleNote: item.title,
-											textNote: item.text,
-											infos: item,
-											isType: "note",
-										}, () => {
-											this.openModalShowNote()
-										})
-									}}>
-									
-									<div style={{ height: "50px" }}>
-										<h3><b>{item.title}</b></h3>
-									</div>
-									<div style={{ height: "200px" }}>
-										<Note text={item.text}></Note>
+								<div style={{ justifyContent: "center", alignItems: "center" }} key={item._id}>
+									<div props={item}
+										variant="contained"
+										style={{
+											width: "250px", height: "250px", margin: "15px", marginBottom: "0px", padding: "15px", paddingTop: "10px",
+											textTransform: 'none', backgroundColor: "white", textAlign: "left",
+											justifyContent: "left", fontSize: "17px", borderRadius: "7px",
+											display: "inline-block", whiteSpace: "nowrap", textOverflow: "ellipsis", overflowY: "scroll",
+											boxShadow: "0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)"
+										}}
+										onContextMenu={(e) => {
+											e.preventDefault()
+											this.setState({
+												mouseX: e.clientX - 2,
+												mouseY: e.clientY - 4,
+												showMainMenu: true,
+												idNote: item.idNote,
+												titleNote: item.title,
+												textNote: item.text,
+												infos: item,
+												isType: "note",
+											})
+										}}
+										onClick={() => {
+											this.setState({
+												idNote: item.idNote,
+												titleNote: item.title,
+												textNote: item.text,
+												infos: item,
+												isType: "note",
+											}, () => {
+												this.openModalShowNote()
+											})
+										}}>
+
+										{item.title && item.title.length > 0 ?
+											<h3><b>{item.title}</b></h3>
+										: null}
+
+										<Note text={this.parseMarkdown(item.text)}></Note>
 									</div>
 
+									<div style={{ height: "50px", marginBottom: "10px", marginTop: "0px", width: "248px", 
+									backgroundColor: "white", borderRadius: "7px", position: "relative",
+									left: "125px", bottom: "30px", transform: "translate(-50%, -50%)", margin: "0 auto"}}>
+										<IconButton style={{color: "#424242"}}>
+											<EditIcon onClick={() => {
+												this.setState({
+													idNote: item.idNote,
+													titleNote: item.title,
+													textNote: item.text,
+													infos: item,
+													isType: "note",
+												}, () => {
+													this.openModalShowNote()
+													this.editText()
+												})
+											}} />
+										</IconButton>
+										<IconButton style={{color: "#424242"}}>
+											<DeleteIcon onClick={() => {
+												this.setState({
+													idNote: item.idNote,
+													titleNote: item.title,
+													textNote: item.text,
+													infos: item,
+													isType: "note",
+												}, () => {
+													this.remove()
+												})
+											}}/>
+										</IconButton>
+										<IconButton style={{color: "#424242"}}>
+											<ShareIcon onClick={() => {
+												this.setState({
+													idNote: item.idNote,
+													titleNote: item.title,
+													textNote: item.text,
+													infos: item,
+													isType: "note",
+												}, () => {
+													this.getShareLink("note")
+												})
+											}}/>
+										</IconButton>
+									</div>
 								</div>
 							)
 						})}
 
 
 						{this.state.files.length > 0 && this.state.files.filter(item => {
-							if(this.state.search.length > 0){
+							if (this.state.search.length > 0) {
 								let re = new RegExp(this.state.search.toLowerCase(), "i")
 								return re.test(item.name.toLowerCase())
 							} else {
@@ -1730,7 +1777,7 @@ class Home extends Component {
 											justifyContent: "left", fontSize: "17px", paddingLeft: "20px"
 										}}
 										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" style={{ fontSize: "50px", marginRight: "10px" }} /> :
-											<i className={this.getMineType(item.type)} style={{fontSize: "50px", marginRight: "10px"}}></i>)}
+											<i className={this.getMineType(item.type)} style={{ fontSize: "50px", marginRight: "10px" }}></i>)}
 										onContextMenu={(e) => {
 											e.preventDefault()
 											this.setState({
@@ -1750,9 +1797,9 @@ class Home extends Component {
 											})
 										}}
 									>
-									<Typography variant="inherit" noWrap >
-										{item.name}
-									</Typography>
+										<Typography variant="inherit" noWrap >
+											{item.name}
+										</Typography>
 									</Button>
 								</div>
 							)
