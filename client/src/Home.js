@@ -76,6 +76,7 @@ class Home extends Component {
 			textNote: "",
 			idNote: "",
 			savingNote: false,
+			indexMouseOverNote: -1,
 
 			showModalAccount: false,
 			newToken: "",
@@ -1664,9 +1665,11 @@ class Home extends Component {
 							} else {
 								return true
 							}
-						}).map((item) => {
+						}).map((item, idx) => {
 							return (
-								<div style={{ justifyContent: "center", alignItems: "center" }} key={item._id}>
+								<div style={{ justifyContent: "center", alignItems: "center" }} key={item._id}
+									onMouseEnter={() => this.setState({indexMouseOverNote: idx})}
+									onMouseLeave={() => this.setState({indexMouseOverNote: -1})}>
 									<div props={item}
 										variant="contained"
 										style={{
@@ -1707,51 +1710,39 @@ class Home extends Component {
 
 										<Note text={this.parseMarkdown(item.text)}></Note>
 									</div>
-
-									<div style={{ height: "50px", marginBottom: "10px", marginTop: "0px", width: "248px", 
-									backgroundColor: "white", borderRadius: "7px", position: "relative",
-									left: "125px", bottom: "30px", transform: "translate(-50%, -50%)", margin: "0 auto"}}>
-										<IconButton style={{color: "#424242"}}>
-											<EditIcon onClick={() => {
-												this.setState({
-													idNote: item.idNote,
-													titleNote: item.title,
-													textNote: item.text,
-													infos: item,
-													isType: "note",
-												}, () => {
-													this.openModalShowNote()
-													this.editText()
-												})
-											}} />
-										</IconButton>
-										<IconButton style={{color: "#424242"}}>
-											<DeleteIcon onClick={() => {
-												this.setState({
-													idNote: item.idNote,
-													titleNote: item.title,
-													textNote: item.text,
-													infos: item,
-													isType: "note",
-												}, () => {
-													this.remove()
-												})
-											}}/>
-										</IconButton>
-										<IconButton style={{color: "#424242"}}>
-											<ShareIcon onClick={() => {
-												this.setState({
-													idNote: item.idNote,
-													titleNote: item.title,
-													textNote: item.text,
-													infos: item,
-													isType: "note",
-												}, () => {
-													this.getShareLink("note")
-												})
-											}}/>
-										</IconButton>
-									</div>
+									
+									{this.state.indexMouseOverNote === idx &&
+										<div style={{ height: "50px", marginBottom: "10px", marginTop: "0px", width: "248px", 
+										backgroundColor: "#fafafa", borderRadius: "7px", position: "relative",
+										left: "125px", bottom: "30px", transform: "translate(-50%, -50%)", margin: "0 auto"}}>
+											<IconButton style={{color: "#424242"}}>
+												<EditIcon onClick={() => {
+													this.setState({
+														idNote: item.idNote,
+														titleNote: item.title,
+														textNote: item.text,
+														infos: item,
+														isType: "note",
+													}, () => {
+														this.openModalShowNote()
+														this.editText()
+													})
+												}} />
+											</IconButton>
+											<IconButton style={{color: "#424242"}}>
+												<ShareIcon onClick={() => {
+													this.setState({
+														idNote: item.idNote,
+														titleNote: item.title,
+														textNote: item.text,
+														infos: item,
+														isType: "note",
+													}, () => {
+														this.getShareLink("note")
+													})
+												}}/>
+											</IconButton>
+										</div>}
 								</div>
 							)
 						})}
