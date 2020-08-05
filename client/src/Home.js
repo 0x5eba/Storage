@@ -18,7 +18,6 @@ import SearchIcon from '@material-ui/icons/Search';
 import SettingsIcon from '@material-ui/icons/Settings';
 import DraftsIcon from '@material-ui/icons/Drafts';
 import EditIcon from '@material-ui/icons/Edit';
-import DeleteIcon from '@material-ui/icons/Delete';
 import ShareIcon from '@material-ui/icons/Share';
 
 import Modal from 'react-bootstrap/Modal';
@@ -1093,7 +1092,12 @@ class Home extends Component {
 						},
 					}}
 				>
-					{this.state.folders.length > 0 && this.state.folders.map((item, index) => (
+					{this.state.folders.length > 0 && this.state.folders.filter((item) => {
+						if(item.password.length !== 0) {
+							return false
+						}
+						return true
+					}).map((item, index) => (
 						<MenuItem key={index} onClick={() => {
 							this.moveToFolder(item)
 							this.closeMenu()
@@ -1712,11 +1716,10 @@ class Home extends Component {
 									</div>
 									
 									{this.state.indexMouseOverNote === idx &&
-										<div style={{ height: "50px", marginBottom: "10px", marginTop: "0px", width: "248px", 
-										backgroundColor: "#fafafa", borderRadius: "7px", position: "relative",
-										left: "125px", bottom: "30px", transform: "translate(-50%, -50%)", margin: "0 auto"}}>
-											<IconButton style={{color: "#424242"}}>
-												<EditIcon onClick={() => {
+										<div style={{ height: "0px", marginTop: "0px", width: "248px", 
+										borderRadius: "7px", position: "relative", bottom: "60px", margin: "0 auto"}}>
+											<IconButton style={{color: "#424242", backgroundColor: "white", marginRight: "10px"}}
+												onClick={() => {
 													this.setState({
 														idNote: item.idNote,
 														titleNote: item.title,
@@ -1727,10 +1730,11 @@ class Home extends Component {
 														this.openModalShowNote()
 														this.editText()
 													})
-												}} />
+												}}>
+												<EditIcon />
 											</IconButton>
-											<IconButton style={{color: "#424242"}}>
-												<ShareIcon onClick={() => {
+											<IconButton style={{color: "#424242", backgroundColor: "white"}} 
+												onClick={() => {
 													this.setState({
 														idNote: item.idNote,
 														titleNote: item.title,
@@ -1740,7 +1744,8 @@ class Home extends Component {
 													}, () => {
 														this.getShareLink("note")
 													})
-												}}/>
+												}}>
+												<ShareIcon />
 											</IconButton>
 										</div>}
 								</div>
