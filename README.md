@@ -20,3 +20,8 @@ Try Storage here [store.sebastienbiollo.com](https://store.sebastienbiollo.com)
 - Note in markdown for more features
 - Search for files, notes and folders by name
 - Is 100% free and open-source
+
+### Local setup
+
+1. `yarn install`
+2. `yarn dev`
