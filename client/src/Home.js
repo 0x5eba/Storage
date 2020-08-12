@@ -1774,7 +1774,7 @@ class Home extends Component {
 									{this.state.indexMouseOverNote === idx &&
 										<div style={{ height: "0px", marginTop: "0px", width: "248px", 
 										borderRadius: "7px", position: "relative", bottom: "60px", margin: "0 auto"}}>
-											<IconButton style={{color: "#424242", backgroundColor: "white", marginRight: "10px"}}
+											{this.state.owner === item.owner && <IconButton style={{color: "#424242", backgroundColor: "white", marginRight: "10px"}}
 												onClick={() => {
 													this.setState({
 														idNote: item.idNote,
@@ -1788,7 +1788,7 @@ class Home extends Component {
 													})
 												}}>
 												<EditIcon />
-											</IconButton>
+											</IconButton>}
 											<IconButton style={{color: "#424242", backgroundColor: "white"}} 
 												onClick={() => {
 													this.setState({
