@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import update from 'react-addons-update';
 
 import { Upload, message, Input as InputAntd } from 'antd';
 import { UploadOutlined, FolderAddOutlined, FileAddOutlined } from '@ant-design/icons';
@@ -8,9 +9,8 @@ import {
 	Button, TextField, IconButton, Menu,
 	MenuItem, ListItemIcon, Typography,
 	FormControlLabel, Divider, TextareaAutosize,
-	InputAdornment
+	InputAdornment, Checkbox
 } from '@material-ui/core';
-import Checkbox from '@material-ui/core/Checkbox';
 import FolderIcon from '@material-ui/icons/Folder';
 import LockIcon from '@material-ui/icons/Lock';
 import FolderSharedIcon from '@material-ui/icons/FolderShared';
@@ -52,6 +52,7 @@ class Home extends Component {
 			passwords: [],
 			modifyFolder: false,
 			isType: "",
+			previewImg: [],
 
 			url: null,
 			downloading: false,
@@ -221,8 +222,15 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
+					let nulls = []
+					for(let a = 0; a < data.length; ++a){
+						nulls.push(null)
+					}
 					this.setState({
-						files: data
+						files: data,
+						previewImg: nulls
+					}, () => {
+						this.getPreviewsImgs(data)
 					})
 				} else {
 					message.error(data.err)
@@ -477,8 +485,15 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
+					let nulls = []
+					for(let a = 0; a < data.length; ++a){
+						nulls.push(null)
+					}
 					this.setState({
-						files: [data]
+						files: [data],
+						previewImg: nulls
+					}, () => {
+						this.getPreviewsImgs(data)
 					})
 				} else {
 					console.error('Error:', data.err)
@@ -1070,6 +1085,48 @@ class Home extends Component {
 			}
 		}
 		return newData.join("\n")
+	}
+
+	getPreviewsImgs = (data) => {
+		for(let a = 0; a < data.length; ++a){
+			if(data[a].type.startsWith('image')) {
+				this.getImagePreview(data[a], a)
+			}
+		}
+	}
+
+	getImagePreview = (item, idx) => {
+		var data = {
+			idFile: item.idFile,
+			owner: this.state.owner,
+			token: this.state.token,
+			parent: this.getParent(),
+			passwords: this.state.passwords,
+		}
+
+		fetch("/api/file/getFile", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		})
+			.then(data => data.blob())
+			.then(data => {
+				let url = URL.createObjectURL(data)
+				this.setState(prevState => {
+					let p = prevState.previewImg
+					p[idx] = url
+					return {
+						previewImg: p
+					}
+				}, () => {
+					console.log(this.state.previewImg)
+				})
+			})
+			.catch((error) => {
+				console.error('Error:', error)
+			})
 	}
 
 	render() {
@@ -1760,10 +1817,9 @@ class Home extends Component {
 							} else {
 								return true
 							}
-						}).map((item) => {
+						}).map((item, idx) => {
 							return (
 								<div className="files" key={item._id}>
-									{/* <i className={this.getMineType(item.type)} style={{fontSize: "70px", marginTop: "20px", position: "absolute", zIndex: "20"}}></i> */}
 									<Button
 										props={item}
 										variant="contained"
@@ -1772,8 +1828,6 @@ class Home extends Component {
 											textTransform: 'none', backgroundColor: "white", textAlign: "left",
 											justifyContent: "left", fontSize: "17px", paddingLeft: "20px"
 										}}
-										startIcon={(item.password.length !== 0 ? <LockIcon className="icons" style={{ fontSize: "50px", marginRight: "10px" }} /> :
-											<i className={this.getMineType(item.type)} style={{ fontSize: "50px", marginRight: "10px" }}></i>)}
 										onContextMenu={(e) => {
 											e.preventDefault()
 											this.setState({
@@ -1793,9 +1847,16 @@ class Home extends Component {
 											})
 										}}
 									>
-										<Typography variant="inherit" noWrap >
-											{item.name}
-										</Typography>
+										{item.type.startsWith('image') ? 
+											<img width="210" height="210" src={(this.state.previewImg.length-1 >= idx && this.state.previewImg[idx] !== null) ? this.state.previewImg[idx] : ""} /> 
+											:
+											<div>
+												<i className={this.getMineType(item.type)} style={{ fontSize: "50px", marginRight: "10px" }}></i>
+												<Typography variant="inherit" noWrap >
+													{item.name}
+												</Typography>
+											</div>
+										}
 									</Button>
 								</div>
 							)
