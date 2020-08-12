@@ -1849,13 +1849,12 @@ class Home extends Component {
 										{item.type.startsWith('image') ? 
 											<img width="210" height="210" src={(this.state.previewImg.length-1 >= idx && this.state.previewImg[idx] !== null) ? this.state.previewImg[idx] : ""} /> 
 											:
-											<div>
-												<i className={this.getMineType(item.type)} style={{ fontSize: "50px", marginRight: "10px" }}></i>
-												<Typography variant="inherit" noWrap >
-													{item.name}
-												</Typography>
-											</div>
+											<i className={this.getMineType(item.type)} style={{ fontSize: "50px", marginRight: "10px" }}></i>
 										}
+										{item.type.startsWith('image') === false &&
+										<Typography variant="inherit" noWrap>
+											{item.name}
+										</Typography>}
 									</Button>
 								</div>
 							)
