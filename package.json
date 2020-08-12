@@ -32,7 +32,6 @@
     "nodemon": "^2.0.2",
     "pdfjs-dist": "^2.3.200",
     "rand-token": "^1.0.1",
-    "react-addons-update": "^15.6.2",
     "react-bootstrap": "^1.0.0",
     "react-contexify": "^4.1.1",
     "react-context-menu": "^3.0.2",
