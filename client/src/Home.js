@@ -1033,6 +1033,16 @@ class Home extends Component {
 			})
 	}
 
+	validURL(str) {
+		var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+		  '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+		  '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+		  '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+		  '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+		  '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+		return !!pattern.test(str);
+	}
+
 	// some magic to add space as it should be
 	parseMarkdown(data) {
 		data = data.split("\n")
@@ -1040,7 +1050,7 @@ class Home extends Component {
 		var start = false
 		for (let a = 0; a < data.length; ++a) {
 			if (data[a].length === 0) {
-				if (start === false) {
+				if (start === false || a < 1 || data[a - 1].length === 0 || data[a + 1].length === 0) {
 					continue
 				}
 				if (["*", "-", "+"].includes(data[a - 1].trim()[0]) === true ||
@@ -1053,6 +1063,22 @@ class Home extends Component {
 				newData.push("\\")
 			} else {
 				start = true
+
+				let split_for_url = data[a].trim().split(" ")
+				for(let b = 0; b < split_for_url.length; ++b) {
+					if(this.validURL(split_for_url[b])) {
+						if(!split_for_url[b].startsWith("https://") && !split_for_url[b].startsWith("http://")) {
+							split_for_url[b] = "https://" + split_for_url[b]
+						}
+						let new_url = split_for_url[b].replace("https://", "").replace("http://", "").replace("www.", "")
+						split_for_url[b] = "["+new_url+"]("+split_for_url[b]+")"
+					} else {
+						console.log(split_for_url[b])
+					}
+				}
+
+				data[a] = split_for_url.join(" ")
+				console.log(data[a])
 
 				var check_number_list = data[a].trim().split(". ")
 
@@ -1119,8 +1145,6 @@ class Home extends Component {
 					return {
 						previewImg: p
 					}
-				}, () => {
-					console.log(this.state.previewImg)
 				})
 			})
 			.catch((error) => {
