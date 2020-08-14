@@ -1,6 +1,7 @@
 {
   "scripts": {
     "server": "NODE_ENV=production nodemon app.js",
+    "install-dep": "yarn install && cd client && yarn install && cd ../",
     "client": "cd client && yarn start",
     "dev": "concurrently -n 'server,client' -c 'red,green'  \"nodemon app.js\" \"cd client && yarn start\"",
     "build": "react-scripts build",

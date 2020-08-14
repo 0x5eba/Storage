@@ -23,5 +23,5 @@ Try Storage here [store.sebastienbiollo.com](https://store.sebastienbiollo.com)
 
 ### Local setup
 
-1. `yarn install`
+1. `yarn install-dep`
 2. `yarn dev`
