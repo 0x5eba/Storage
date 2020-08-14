@@ -1,4 +1,3 @@
-const mongodb = require('mongodb');
 const fs = require("fs")
 const mongoose = require('mongoose')
 require('mongoose-double')(mongoose)
@@ -6,15 +5,15 @@ mongoose.set('useCreateIndex', true)
 
 const FileModel = new mongoose.Schema({
     idFile: { type: String, trim: true, default: "", require: true }, // filename
-    owner: { type: String, trim: true, default: "", require: true }, // e' un token
-    name: { type: String, trim: true, default: "", require: true }, // nome file con estenzione
-    parent: { type: String, trim: true, default: "", require: true }, // idFolder in cui e' dentro
-    password: { type: String, trim: true, default: "" }, // se password !== '' allora devi passargli password per vederlo o essere l'owner
+    owner: { type: String, trim: true, default: "", require: true }, // is a token
+    name: { type: String, trim: true, default: "", require: true }, // name file + estension
+    parent: { type: String, trim: true, default: "", require: true }, // idFolder which is inside
     // linkModify: { type: String, trim: true, default: "" }, // _id + random_string
     linkView: { type: String, trim: true, default: "" }, // _id + random_string
-    visibleToEveryone: { type: Boolean, default: true },
-	type: { type: String, trim: true, default: "" }, // se e' un'immagine o un txt o pdf posso fare una preview, altrimenti solo download
+    // visibleToEveryone: { type: Boolean, default: true },
+	type: { type: String, trim: true, default: "" },
 	createdAt: { type: Date, default: Date.now },
+	sizeFile: { type: Number, default: 0 }, // size in kb
 })
 
 const File = mongoose.model('File', FileModel, 'File')

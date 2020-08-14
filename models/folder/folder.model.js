@@ -4,11 +4,9 @@ mongoose.set('useCreateIndex', true)
 
 const FolderModel = new mongoose.Schema({
     idFolder: { type: String, trim: true, default: "", require: true },
-    owner: { type: String, trim: true, default: "", require: true }, // e' un token
-	parent: { type: String, trim: true, default: "", require: true }, // idFolder del parent
-	// children: [{ type: String, trim: true, default: "" }], // idFolders dei figli
-
-    name: { type: String, trim: true, default: "", require: true }, // nome folder
+    owner: { type: String, trim: true, default: "", require: true }, // is a token
+	parent: { type: String, trim: true, default: "", require: true }, // idFolder of parent
+    name: { type: String, trim: true, default: "", require: true }, // name folder
     password: { type: String, trim: true, default: "" }, // se password !== '' allora devi passargli password per vederlo o essere l'owner
 	linkView: { type: String, trim: true, default: "" }, // sha id
 	visibleToEveryone: { type: Boolean, default: false },
@@ -28,7 +26,6 @@ exports.saveFolder = (folderData) => {
 	})
 }
 
-
 exports.getFolder = (idFolder) => {
 	return new Promise((resolve, reject) => {
 		Folder.findOne({idFolder: idFolder}, {}, function (err, folder) {
@@ -40,7 +37,7 @@ exports.getFolder = (idFolder) => {
 
 exports.getFolders = (owner, parent) => {
 	return new Promise((resolve, reject) => {
-		if(parent === "/"){
+		/*if(parent === "/"){
 			Folder.find({ parent: parent, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {}, function (err, folder) {
 				if (err) return reject(err)
 				resolve(folder)
@@ -50,7 +47,12 @@ exports.getFolders = (owner, parent) => {
 				if (err) return reject(err)
 				resolve(folder)
 			})
-		}
+		}*/
+
+		Folder.find({ parent: parent, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {}, function (err, folder) {
+			if (err) return reject(err)
+			resolve(folder)
+		})
 	})
 }
 
@@ -109,12 +111,3 @@ exports.modify = (owner, idFolder, password, name, visibleToEveryone) => {
 		})
 	})
 }
-
-// exports.addFolderToParent = (parent, idFolder) => {
-// 	return new Promise((resolve, reject) => {
-// 		Folder.findOneAndUpdate({ idFolder: parent }, { $push: { children: idFolder } }, { new: true }, function (err, folder) {
-// 			if (err) return reject(err)
-// 			resolve(folder)
-// 		})
-// 	})
-// }

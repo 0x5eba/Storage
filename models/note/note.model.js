@@ -6,13 +6,12 @@ mongoose.set('useCreateIndex', true)
 
 const NoteModel = new mongoose.Schema({
     idNote: { type: String, trim: true, default: "", require: true }, // notename
-    owner: { type: String, trim: true, default: "", require: true }, // e' un token
-    parent: { type: String, trim: true, default: "", require: true }, // idFolder in cui e' dentro
+    owner: { type: String, trim: true, default: "", require: true }, // is a token
+    parent: { type: String, trim: true, default: "", require: true }, // idFolder which is inside
 	title: { type: String, trim: true, default: "" }, 
     text: { type: String, trim: true, default: "" }, 
-    password: { type: String, trim: true, default: "" }, // se password !== '' allora devi passargli password per vederlo o essere l'owner
     linkView: { type: String, trim: true, default: "" }, // _id + random_string
-	visibleToEveryone: { type: Boolean, default: true },
+	// visibleToEveryone: { type: Boolean, default: true },
 	createdAt: { type: Date, default: Date.now },
 })
 
@@ -69,7 +68,7 @@ exports.removeNote = (idNote) => {
 
 exports.getNotes = (owner, parent) => {
     return new Promise((resolve, reject) => {
-        Note.find({ parent: parent, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {}, function (err, note) {
+        Note.find({ parent: parent, $or: [{ owner: owner }] }, {}, function (err, note) {
 			if (err) return reject(err)
 			resolve(note)
 		})

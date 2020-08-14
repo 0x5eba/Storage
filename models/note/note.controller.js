@@ -6,14 +6,6 @@ exports.createNote = (req, res) => {
     crypto.randomBytes(16, (err, buf) => {
         if (err) return res.status(403).send({ err: "Error creating note" })
 
-        // if(req.body.password.length !== 0){
-        //     let salt = bcrypt.genSaltSync(10)
-        //     let hash = bcrypt.hashSync(req.body.password, salt)
-        //     req.body.password = hash
-        // } else {
-        //     req.body.password = ""
-        // }
-
         var idNote = buf.toString('hex') + Date.now()
 
         req.body = {
@@ -30,7 +22,6 @@ exports.createNote = (req, res) => {
                 res.status(201).send(result)
             })
             .catch(err => {
-                // print(err)
                 res.status(403).send({ err: "Error creating note" })
             })
     })
@@ -69,9 +60,7 @@ exports.getNoteById = (req, res, next) => {
 exports.checkPrivileges = (req, res, next) => {
     var note = req.body.result
 
-    if(note.password.length !== 0 && req.body.password !== note.password){
-        res.status(403).send({ err: "Error wrong password for this note" })
-    } else if(note.visibleToEveryone === false && req.body.owner !== note.owner){
+    if(note.visibleToEveryone === false && req.body.owner !== note.owner){
         res.status(403).send({ err: "You are not autorized to access this note" })
     } else {
         return next()
@@ -166,7 +155,6 @@ exports.saveNote = (req, res, next) => {
             res.status(201).send({});
         })
         .catch(err => {
-            // print(err)
             res.status(403).send({ err: "Error modifying note" })
         })
 }

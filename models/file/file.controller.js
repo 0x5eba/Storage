@@ -12,8 +12,8 @@ exports.uploadFile = (req, res) => {
         name: req.body.name,
         owner: req.body.owner,
         parent: req.body.parent,
-        visibleToEveryone: req.body.visibleToEveryone,
         type: req.body.type,
+        sizeFile: Math.ceil(parseInt(req.body.sizeFile, 10)/1000),
     }
 
     FileController.uploadFile(req.body)
@@ -62,9 +62,7 @@ exports.getFileById = (req, res, next) => {
 exports.checkPrivileges = (req, res, next) => {
     var file = req.body.result
 
-    if(file.password.length !== 0 && req.body.password !== file.password){
-        res.status(403).send({ err: "Error wrong password for this file" })
-    } else if(file.visibleToEveryone === false && req.body.owner !== file.owner){
+    if(file.visibleToEveryone === false && req.body.owner !== file.owner){
         res.status(403).send({ err: "You are not autorized to access this file" })
     } else {
         return next()

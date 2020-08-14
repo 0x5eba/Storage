@@ -38,6 +38,7 @@ class Home extends Component {
 			path: window.location.href,
 			name: "",
 			password: "",
+			sizeFile: 0,
 			visible: false,
 			showModal: false,
 			showModalPassword: false,
@@ -142,7 +143,7 @@ class Home extends Component {
 	getFoldersAndFiles = () => {
 		var viewLink
 		if (this.state.path.includes("/file/")) {
-			viewLink = this.state.path.split('file/')
+			viewLink = this.state.path.split('/file/')
 			viewLink = viewLink[viewLink.length - 1]
 
 			this.setState({
@@ -461,9 +462,6 @@ class Home extends Component {
 	searchFilesAndFolders = (e) => {
 		this.setState({
 			search: e.target.value
-		}, () => {
-
-
 		})
 	}
 
@@ -484,15 +482,13 @@ class Home extends Component {
 			.then(data => data.json())
 			.then(data => {
 				if (data.err === undefined) {
-					let nulls = []
-					for(let a = 0; a < data.length; ++a){
-						nulls.push(null)
-					}
 					this.setState({
 						files: [data],
-						previewImg: nulls
+						previewImg: [null]
 					}, () => {
-						this.getPreviewsImgs(data)
+						if(data.type.startsWith('image')) {
+							this.getSharedFileDownload(false, true)
+						}
 					})
 				} else {
 					console.error('Error:', data.err)
@@ -503,7 +499,7 @@ class Home extends Component {
 			})
 	}
 
-	getSharedFileDownload = (showModel) => {
+	getSharedFileDownload = (showModel, showPreviewImg) => {
 		var data = {
 			link: this.state.viewLink,
 			owner: this.state.owner,
@@ -528,6 +524,17 @@ class Home extends Component {
 						url: URL.createObjectURL(data),
 						downloading: false
 					}, () => {
+						if(showPreviewImg === true) {
+							this.setState(prevState => {
+								let p = prevState.previewImg
+								p[0] = this.state.url
+								return {
+									previewImg: p
+								}
+							})
+							return
+						}
+
 						if (showModel === true) {
 							var win = window.open(this.state.url, '_blank')
 							win.focus()
@@ -588,7 +595,7 @@ class Home extends Component {
 	clickFile = (showModel = true) => {
 
 		if (this.state.path.includes("/file/")) {
-			return this.getSharedFileDownload(showModel)
+			return this.getSharedFileDownload(showModel, false)
 		}
 
 		var data = {
@@ -1072,13 +1079,10 @@ class Home extends Component {
 						}
 						let new_url = split_for_url[b].replace("https://", "").replace("http://", "").replace("www.", "")
 						split_for_url[b] = "["+new_url+"]("+split_for_url[b]+")"
-					} else {
-						console.log(split_for_url[b])
 					}
 				}
 
 				data[a] = split_for_url.join(" ")
-				console.log(data[a])
 
 				var check_number_list = data[a].trim().split(". ")
 
@@ -1113,6 +1117,7 @@ class Home extends Component {
 	}
 
 	getPreviewsImgs = (data) => {
+		console.log(data)
 		for(let a = 0; a < data.length; ++a){
 			if(data[a].type.startsWith('image')) {
 				this.getImagePreview(data[a], a)
@@ -1604,13 +1609,17 @@ class Home extends Component {
 										disabled: (this.getParent() === "/" || this.state.disableBottons === true) ? true : false,
 										name: 'file',
 										action: '/api/file/uploadFile',
-										beforeUpload(file, fileList) {
+										beforeUpload: (file, fileList) => {
 											var files = fileList
 											let size = 16000000
 											for (var a = 0; a < files.length; a++) {
 												if (files[a].size > size) {
 													message.error(`${files[a].name} is too large, please pick a smaller file\n`);
 													return false
+												} else {
+													this.setState({
+														sizeFile: files[a].size
+													})
 												}
 											}
 
@@ -1624,6 +1633,7 @@ class Home extends Component {
 											parent: this.getParent(),
 											password: "", // TODO
 											visibleToEveryone: true, // TODO
+											sizeFile: this.state.sizeFile,
 										},
 										showUploadList: false,
 										onChange: this.showMessageUploadFile

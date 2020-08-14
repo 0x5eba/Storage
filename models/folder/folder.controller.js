@@ -4,7 +4,6 @@ const NoteController = require('../note/note.model')
 const crypto = require("crypto")
 const bcrypt = require("bcryptjs")
 const escapeRegExp = require('lodash.escaperegexp')
-// const // print = require("../logs/logs.js")
 
 exports.createFolder = (req, res, next) => {
     crypto.randomBytes(16, (err, buf) => {
@@ -35,7 +34,6 @@ exports.createFolder = (req, res, next) => {
                 res.status(200).send(result)
             })
             .catch(err => {
-                // print(err)
                 res.status(403).send({ err: "Error creating folder" })
             })
     })
@@ -47,7 +45,6 @@ exports.addFolderToParent = (req, res, next) => {
             res.status(200).send({})
         })
         .catch(err => {
-            // print(err)
             res.status(403).send({ err: "Error adding id to parent folder" })
         })
 }
@@ -63,7 +60,6 @@ exports.getFolder = (req, res, next) => {
             }
         })
         .catch(err => {
-            // print(err)
             res.status(403).send({ err: "Error getting folder" })
         })
 }
@@ -73,13 +69,11 @@ exports.checkPrivileges = (req, res, next) => {
 
     if(folder.password.length !== 0){
         if(!req.body.password || req.body.password.length === 0){
-            // print("No password provided for this folder")
             res.status(403).send({ err: "No password provided for this folder" })
         } else {
             if(bcrypt.compareSync(req.body.password, folder.password)){
                 return next()
             } else {
-                // print("Error wrong password for this folder")
                 res.status(403).send({ err: "Error wrong password for this folder" })
             }
         }
@@ -100,13 +94,11 @@ exports.checkIfFolderExistForFile = (req, res, next) => {
                 req.body.parent = result.idFolder
                 return next()
             } else {
-                // print("Error this folder doesn't exist")
                 req.body.deleteFile = true
                 return next()
             }
         })
         .catch(err => {
-            // print(err)
             req.body.deleteFile = true
             return next()
         })
@@ -123,12 +115,10 @@ exports.checkIfFolderExist = (req, res, next) => {
                 req.body.parent = result.idFolder
                 return next()
             } else {
-                // print("Error this folder doesn't exist")
                 res.status(403).send({ err: "Error this folder doesn't exist" })
             }
         })
         .catch(err => {
-            // print(err)
             res.status(403).send({ err: "Error getting folder" })
         })
 }
@@ -139,8 +129,6 @@ exports.getFolders = (req, res, next) => {
             res.status(201).send(result);
         })
         .catch(err => {
-            // print(err)
-            console.log(err)
             res.status(403).send({ err: "Error getting folder" })
         })
 }
@@ -164,26 +152,17 @@ exports.deleteFolders = async (req, res, next) => {
                     allFolders = [...allFolders]
 
                     FileController.deleteFilesByParents(allFolders)
-                        .then(() => {
-
-                        })
-                        .catch((err) => {
-                            console.log(err)
-                        })
+                        .then(() => {})
+                        .catch(() => {})
 
                     NoteController.deleteNotesByParent(allFolders)
-                        .then(() => {
-
-                        })
-                        .catch((err) => {
-                            console.log(err)
-                        })
+                        .then(() => {})
+                        .catch(() => {})
 
                     return res.status(201).send({});
                 }
             })
             .catch(err => {
-                // print(err)
                 return res.status(403).send({ err: "Error deleting folder" })
             })
     }
@@ -193,17 +172,14 @@ exports.isOwner = (req, res, next) => {
     FolderController.isOwner(req.body.owner, req.body.idFolder)
         .then((result) => {
             if(result === null){
-                // print("No folder found")
                 res.status(403).send({ err: "No folder found" })
             } else if(result.owner !== req.body.owner){
-                // print("You are not authorized to access this folder")
                 res.status(403).send({ err: "You are not authorized to access this folder" })
             } else {
                 return next()
             }
         })
         .catch(err => {
-            // print(err)
             res.status(403).send({ err: "Error isOwner folder" })
         })
 }
@@ -216,7 +192,6 @@ exports.checkIfPasswordRequired = (req, res, next) => {
     FolderController.getFolder(req.body.parent) // e' contorto che ci sia parent, ma e' giusto
         .then((result) => {
             if(result === null){
-                // print("No folder found")
                 res.status(403).send({ err: "No folder found" })
             } else if(result.password.length !== 0){
 
@@ -233,7 +208,6 @@ exports.checkIfPasswordRequired = (req, res, next) => {
             }
         })
         .catch(err => {
-            // print(err)
             res.status(403).send({ err: "Error check if password required folder" })
         })
 }
@@ -256,7 +230,6 @@ exports.checkIfPasswordChanged = (req, res, next) => {
             }
         })
         .catch(err => {
-            // print(err)
             res.status(403).send({ err: "Error changing password folder" })
         })
 }
@@ -267,7 +240,6 @@ exports.modify = (req, res, next) => {
             res.status(201).send({});
         })
         .catch(err => {
-            // print(err)
             res.status(403).send({ err: "Error modifying folder" })
         })
 }
