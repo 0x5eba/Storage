@@ -3,7 +3,6 @@ const FileController = require('../file/file.model')
 const NoteController = require('../note/note.model')
 const crypto = require("crypto")
 const bcrypt = require("bcryptjs")
-const escapeRegExp = require('lodash.escaperegexp')
 
 exports.createFolder = (req, res, next) => {
     crypto.randomBytes(16, (err, buf) => {
@@ -37,6 +36,25 @@ exports.createFolder = (req, res, next) => {
                 res.status(403).send({ err: "Error creating folder" })
             })
     })
+}
+
+exports.createFolderRoom = (req, res, next) => {
+    req.body = {
+        idFolder: req.body.idFolder,
+        owner: req.body.idFolder + Date.now(),
+        name: req.body.name,
+        parent: req.body.parent,
+        linkView: req.body.idFolder,
+        visibleToEveryone: false
+    }
+
+    FolderController.saveFolder(req.body)
+        .then((result) => {
+            res.status(200).send(result)
+        })
+        .catch(err => {
+            res.status(403).send({ err: "Error creating folder room" })
+        })
 }
 
 exports.addFolderToParent = (req, res, next) => {
@@ -242,4 +260,22 @@ exports.modify = (req, res, next) => {
         .catch(err => {
             res.status(403).send({ err: "Error modifying folder" })
         })
+}
+
+exports.checkIfFolderExistRoom = (req, res, next) => {
+    if(req.body.parent === "/"){
+        FolderController.getFolder(req.body.idFolder)
+            .then((result) => {
+                if(result !== null){
+                    res.status(403).send({ err: "Folder already created" })
+                } else {
+                    return next()
+                }
+            })
+            .catch(err => {
+                res.status(403).send({ err: "Error changing password folder" })
+            })
+    } else {
+        res.status(403).send({ err: "Error not the right folder" })
+    }
 }

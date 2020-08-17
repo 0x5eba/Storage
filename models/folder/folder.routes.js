@@ -33,4 +33,10 @@ exports.routesConfig = function (app) {
         FolderController.checkIfPasswordChanged,
         FolderController.modify,
     ]);
+
+    app.post('/api/folder/createFolderRoom', [
+        AuthController.proofTokenRoom,
+        FolderController.checkIfFolderExistRoom,
+        FolderController.createFolderRoom,
+    ]);
 }
