@@ -11,7 +11,7 @@ const NoteModel = new mongoose.Schema({
 	title: { type: String, trim: true, default: "" }, 
     text: { type: String, trim: true, default: "" }, 
     linkView: { type: String, trim: true, default: "" }, // _id + random_string
-	// visibleToEveryone: { type: Boolean, default: true },
+	visibleToEveryone: { type: Boolean, default: true },
 	createdAt: { type: Date, default: Date.now },
 })
 
@@ -68,7 +68,7 @@ exports.removeNote = (idNote) => {
 
 exports.getNotes = (owner, parent) => {
     return new Promise((resolve, reject) => {
-        Note.find({ parent: parent, $or: [{ owner: owner }] }, {}, function (err, note) {
+        Note.find({ parent: parent, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {}, function (err, note) {
 			if (err) return reject(err)
 			resolve(note)
 		})

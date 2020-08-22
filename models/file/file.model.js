@@ -10,7 +10,7 @@ const FileModel = new mongoose.Schema({
     parent: { type: String, trim: true, default: "", require: true }, // idFolder which is inside
     // linkModify: { type: String, trim: true, default: "" }, // _id + random_string
     linkView: { type: String, trim: true, default: "" }, // _id + random_string
-    // visibleToEveryone: { type: Boolean, default: true },
+    visibleToEveryone: { type: Boolean, default: true },
 	type: { type: String, trim: true, default: "" },
 	createdAt: { type: Date, default: Date.now },
 	sizeFile: { type: Number, default: 0 }, // size in kb
@@ -139,16 +139,6 @@ exports.getFiles = (owner, parent) => {
 			resolve(file)
 		})
     })
-}
-
-exports.searchFiles = (owner, search) => {
-	return new Promise((resolve, reject) => {
-		File.find({ name: { "$regex": new RegExp("^" + search.toLowerCase(), "i") }, $or: [{ owner: owner }, { visibleToEveryone: true }] }, {})
-			.limit(50).exec(function (err, file) {
-			if (err) return reject(err)
-			resolve(file)
-		})
-	})
 }
 
 exports.deleteFile = (owner, idFile) => {

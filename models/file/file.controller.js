@@ -1,6 +1,5 @@
 const FileController = require('./file.model')
 const crypto = require("crypto")
-const escapeRegExp = require('lodash.escaperegexp')
 
 exports.uploadFile = (req, res) => {
 
@@ -101,18 +100,6 @@ exports.removeFileWihCheck = (req, res, next) => {
     } else {
         return next()
     }
-}
-
-exports.searchFile = (req, res, next) => {
-    var search = escapeRegExp(req.body.search)
-    FileController.searchFiles(req.body.owner, search)
-        .then((result) => {
-            req.body.files = result
-            return next()
-        })
-        .catch(err => {
-            res.status(403).send({ err: "Error searching files" })
-        })
 }
 
 exports.deleteFile = (req, res, next) => {

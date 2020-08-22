@@ -66,9 +66,6 @@ class Home extends Component {
 			showMainMenu: false,
 			infos: null,
 
-			searchFolders: [],
-			searchFiles: [],
-
 			showModalNote: false,
 			edit: false,
 			createNote: false,
